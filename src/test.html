@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<body>
+		<script>
+ class Vector {
+ 
+  constructor(x, y, z, w) {
+    this.x = x || 0
+    this.y = y || 0
+    this.z = z || 0
+    this.w = w || 0
+  }
+
+  add(v) {
+    // TODO: implement vector addition
+    this.x += v.x
+    this.y += v.y
+    this.z += v.z
+    this.w += v.w
+  
+    return this
+  }
+
+  sub(v) {
+    // TODO: implement vector subtraction
+    this.x -= v.x
+   this.y -= v.y
+    this.z -= v.z
+    this.w -= v.w
+
+
+    return this
+  }
+
+  /**
+    * multiplyScalar implements scalar vector or scalar point multiplication.
+    * @param {number} scalar is a scalar number.
+    * @returns {Vector} this is a point or a vector
+    */
+   multiplyScalar(scalar) {
+    // TODO: implement vector scalar multiplication
+   
+    this.x *= scalar
+    this.y *= scalar
+    this.z *= scalar
+    this.w *= scalar
+
+    return this
+  }
+  dot(v) {
+    // TODO: implement dot product
+    if( v.w === 0 && this.w===0 ){
+      return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w}
+      
+    else {
+      throw new Error( 'nonono' )
+  }}
+
+
+
+/* crossVectors(v1, v2) {
+    // TODO: implement cross product
+
+    const myX = v1v2
+    const myY = v1v2
+    const myZ = v1v2
+    const myW = v1v2
+
+
+    this=new Vector(myX, myY,myZ,myW)
+    return this
+
+  } */
+}
+
+
+ 
+
+
+
+
+        
+let v1=new Vector(1,1,1,1);
+
+let v2=new Vector(2,2,2,2);
+
+</script>
+</body>
+</html>
+
+

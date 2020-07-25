@@ -70,11 +70,11 @@ export default class Vector {
     */
   dot(v) {
     // TODO: implement dot product
-    if( v.w === 0 && this.w===0 ){
+    if( v.w === 0 && this.w === 0 ){
       return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w}
       
     else {
-      throw new Error( 'nonono' )
+      throw new Error( 'i need vectors!!!!!!!!!!!' )
   }}
   /**
     * crossVectors implements cross product for two given vectors
@@ -86,11 +86,16 @@ export default class Vector {
     */
   crossVectors(v1, v2) {
     if( v1.w === 0 && v2.w === 0 && this.w === 0  ){
-      return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w}
+
+      this.x = v1.y*v2.z - v1.z*v2.y
+      this.y = v1.z*v2.x - v1.x*v2.z
+      this.z = v1.x*v2.y - v1.y*v2.x
       
+      return this
+    }
+
     else {
-      throw new Error( 'nonono' )}
-    return this
+      throw new Error( 'give me vectors brooo!' )}
   }
   /**
     * normalize normalizes this vector to a unit vector.
@@ -100,8 +105,15 @@ export default class Vector {
     */
   normalize() {
     // TODO: implement vector normalization
+    if(this.w === 0){
+      const length = Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z ) 
+      this.multiplyScalar(1/length) 
+      return this
+    }
 
-    return this
+    else {
+      throw new Error( 'give me vertors!' )}
+    
   }
   /**
     * applyMatrix applies 4x4 matrix by 4x1 vector multiplication.
@@ -113,6 +125,18 @@ export default class Vector {
   applyMatrix(m) {
     // TODO: implement 4x4 matrix and 4x1 vector multiplication
 
-    return this
+    // Matrix.xs
+   const x = this.x, y = this.y, z = this.z, w = this.w;
+   const e = m.xs;
+  
+
+    this.x = e[ 0 ] * x + e[ 1 ] * y + e[ 2 ] * z + e[ 3 ] * w;
+		this.y = e[ 4 ] * x + e[ 5 ] * y + e[ 6 ] * z + e[ 7 ] * w;
+		this.z = e[ 8 ] * x + e[ 9 ] * y + e[ 10 ] * z + e[ 11 ] * w;
+		this.w = e[ 12 ] * x + e[ 13 ] * y + e[ 14 ] * z + e[ 15 ] * w;  
+
+
+   return this
+
   }
 }

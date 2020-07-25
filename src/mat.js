@@ -41,7 +41,7 @@ export default class Matrix {
     x31, x32, x33, x34,
     x41, x42, x43, x44
   ) {
-    // TODO: set given the parameters to the matrix elements (1p)
+    // los geht : 10:35 TODO: set given the parameters to the matrix elements (1p)
 
   }
   /**

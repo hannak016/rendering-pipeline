@@ -26,6 +26,10 @@ export default class Vector {
     */
   add(v) {
     // TODO: implement vector addition
+    this.x += v.x
+    this.y += v.y
+    this.z += v.z
+    this.w += v.w
 
     return this
   }
@@ -36,6 +40,11 @@ export default class Vector {
     */
   sub(v) {
     // TODO: implement vector subtraction
+    this.x -= v.x
+    this.y -= v.y
+    this.z -= v.z
+    this.w -= v.w
+
 
     return this
   }
@@ -46,6 +55,10 @@ export default class Vector {
     */
   multiplyScalar(scalar) {
     // TODO: implement vector scalar multiplication
+    this.x *= scalar
+    this.y *= scalar
+    this.z *= scalar
+    this.w *= scalar
 
     return this
   }
@@ -57,8 +70,12 @@ export default class Vector {
     */
   dot(v) {
     // TODO: implement dot product
-
-  }
+    if( v.w === 0 && this.w===0 ){
+      return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w}
+      
+    else {
+      throw new Error( 'nonono' )
+  }}
   /**
     * crossVectors implements cross product for two given vectors
     * and assign the result to this and returns it.
@@ -68,8 +85,11 @@ export default class Vector {
     * @returns {Vector} the result of cross product
     */
   crossVectors(v1, v2) {
-    // TODO: implement cross product
-
+    if( v1.w === 0 && v2.w === 0 && this.w === 0  ){
+      return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w}
+      
+    else {
+      throw new Error( 'nonono' )}
     return this
   }
   /**

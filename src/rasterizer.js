@@ -77,6 +77,21 @@ export default class Rasterizer {
   initBuffers() {
     // TODO: buffer initialization
 
+    //frameBuf black rgb [0,0,0]
+    const myCol = [0,0,0]
+     for( let i = 0;i < this.frameBuf.length;i++ ){
+      this.frameBuf[ i ] = myCol;
+    } 
+
+
+    //depthBuf
+    const myDepth = 1
+    for(let j = 0;j < this.depthBuf.length;j++ ){
+     this.depthBuf[ j ] = myDepth;
+   } 
+    
+    return this
+
   }
   /**
    * initTransformation initializes all transformation matrices,

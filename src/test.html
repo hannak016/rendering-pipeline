@@ -218,6 +218,48 @@ let v=new Vector(1,1,1,0);
 
 let vv=new Vector(5,6,7,0);
 
+
+class Rasterizer {
+  constructor() {
+    this.frameBuf = new Array(10)
+    this.depthBuf = new Array(10)
+   
+    }
+    initBuffers() {
+    // TODO: buffer initialization
+
+    //frameBuf
+    const myBlack = [0,0,0]
+     for( let i = 0;i < this.frameBuf.length;i++ ){
+      this.frameBuf[ i ] = myBlack;
+    } 
+
+
+    //depthBuf
+    //const myDepth = this.camera.far;
+    // or Infinity?
+    // const myDepth = -Infinity;
+    // or-1?
+    // const myDepth = -Infinity;
+    const myDepth = -1;
+
+    for(let j = 0;j < this.depthBuf.length;j++ ){
+     this.depthBuf[ j ] = myDepth;
+   } 
+    
+    return this
+
+  }
+
+
+}
+
+
+let ras = new Rasterizer();
+console.log(ras);
+  ras.initBuffers();
+
+
 </script>
 </body>
 </html>

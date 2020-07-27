@@ -34,7 +34,7 @@ For instance:
   - [ ] Init viewport matrix (3p)
 
 - Prepare the needed informations for drawing (**total: 10p**)
-  - [ ] invoke needed initializations (1p)
+  - [x] invoke needed initializations (1p)
   - [ ] accessing vertices coordinates (3p)
   - [ ] accessing UVs (2p)
   - [ ] accessing normals (2p)

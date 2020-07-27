@@ -237,6 +237,12 @@ class Monitor extends Renderer {
     const t0 = performance.now()
     r.render()
     const t1 = performance.now()
+    // check initBuffer() 
+    //console.log(r.depthBuf)
+    //check matrice
+    //console.log(r.Tmodel)
+    //console.log(r.Tcamera)
+
 
     this.flushFrameBuffer(r)
     console.log(`CPU rasterizer perf: ${1000/(t1-t0)} fps`)

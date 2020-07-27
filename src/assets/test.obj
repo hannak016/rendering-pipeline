@@ -1,0 +1,18 @@
+v x1 y1 z1
+vt u1 v1
+vn vn1x vn1y vn1z
+
+
+v x2 y2 z2
+vt u2 v2
+vn vn2x vn2y vn2z
+
+
+
+v x3 y3 z3
+vt u3 v3
+vn vn3x vn3y vn3z
+
+
+
+f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3

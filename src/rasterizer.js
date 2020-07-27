@@ -100,6 +100,89 @@ export default class Rasterizer {
   initTransformation() {
     // TODO: prepare transformation matrices
 
+    //Tmodel
+    const myTmodel = new Matrix(); 
+    myTmodel.set(
+      this.model.scale.x,0,0,-this.model.position.x,
+      0,this.model.scale.y,0,-this.model.position.y,
+      0,0,this.model.scale.z,-this.model.position.z,
+      0,0,0,1
+    )
+
+    this.Tmodel = myTmodel;
+    //after applying Tmodel => model at (0,0,0)
+
+
+
+
+    //Tcamera
+    const myTcamera = new Matrix();
+    const myZ = this.camera.position.sub(this.camera.lookAt).normalize();
+    let myX = new Vector();
+    myX.crossVectors(this.camera.up,myZ).normalize();
+    let myY = new Vector();
+    myY.crossVectors(myZ,myX).normalize();
+
+
+    myTcamera.set(
+      myX.x,myY.x,myZ.x,0,
+      myX.y,myY.y,myZ.y,0,
+      myX.z,myY.z,myZ.z,0,
+      0,0,0,1 
+    )
+    
+    this.Tcamera = myTcamera;
+    //after applying Tcamera => model's position is relative to the camera
+
+
+
+
+    //Tpersp
+    let aspect = this.camera.aspect;
+    let fov = this.camera.fov * Math.PI / 180
+    let n = this.camera.near;
+    let f = this.camera.far;
+    let r = - aspect * n * Math.tan(fov/2);
+    let t = - n * Math.tan(fov/2);
+
+
+    const myTpersp = new Matrix();
+    //step1: Tortho
+    const Tortho = new Matrix();
+    Tortho.set(
+      1/r,0,0,0,
+      0,1/t,0,0,
+      0,0,2/(n-f),(f+n)/(f-n),
+      0,0,0,1
+    )
+    //step2:Tpo
+    const Tpo = new Matrix();
+    Tpo.set(
+      n,0,0,0,
+      0,n,0,0,
+      0,0,n+f,-n*f,
+      0,0,1,0
+    )
+    myTpersp.multiplyMatrices(Tortho,Tpo);
+    this.Tpersp = myTpersp;
+    //after applying Tpersp => model is in 2D
+
+
+
+    //Tviewport
+    const myTviewport = new Matrix();
+    myTviewport.set(
+      this.screen.width/2,0,0,this.screen.width/2,
+      0,this.screen.height/2,0,this.screen.height/2,
+      0,0,1,0,
+      0,0,0,1
+    )
+
+    
+    this.Tviewport = myTviewport;
+    //after applying Tviewpoint => model shows on screen
+
+
   }
 
   /**
@@ -108,6 +191,44 @@ export default class Rasterizer {
    */
   render() {
     // TODO: initialization, and vertex generation, etc.
+
+    //init Buffer
+    this.initBuffers();
+
+    //tranform my obhect to the screen
+    this.initTransformation();
+
+    //vertex generation
+
+    
+     {/*    
+    var vA = new Array();
+
+    var fA = new Array();
+    var uvA= new Array();
+    var nA= new Array();
+    
+
+    readline();//?????
+    if('v'){vA.add()}
+    else if('u'){uvA.add()}
+    else if('vn'){nA.add()}
+    else if('f'){fA.add()}
+    this.draw(fA,uvA,nA);
+
+     */}
+
+
+
+    //call my two shaders
+  
+
+
+
+
+
+
+
 
   }
   /**
@@ -130,6 +251,10 @@ export default class Rasterizer {
    */
   vertexShader(vertex) {
     // TODO: transforms vertex from model space to projection space
+    //uniform 
+    //in
+    //out
+
 
   }
   /**
@@ -143,6 +268,9 @@ export default class Rasterizer {
    */
   fragmentShader(uv, normal, x) {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
+     //uniform 
+    //in
+    //out
 
   }
 }

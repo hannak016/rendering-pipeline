@@ -24,8 +24,8 @@ For instance:
   - [x] 4x4 by 4x4 matrix multiplication (3p)
 
 - Buffers initialization  (**total: 4p**)
-  - [ ] init the frame buffer by _black_ color (2p)
-  - [ ] init depth buffer by an appropriate value (2p)
+  - [x] init the frame buffer by _black_ color (2p)
+  - [x] init depth buffer by an appropriate value (2p)
 
 - Prepare transformation matrices (**total: 21p**)
   - [ ] Init model matrix (6p)

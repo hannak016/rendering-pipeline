@@ -237,13 +237,16 @@ class Monitor extends Renderer {
     const t0 = performance.now()
     r.render()
     const t1 = performance.now()
-    // check initBuffer() 
-    //console.log(r.depthBuf)
-    //check matrice
+    
+/*     check initBuffer() 
+    console.log(r.depthBuf) */
+
+/*     check matrice
     console.log(r.Tmodel)
     console.log(r.Tcamera)
     console.log(r.Tpersp)
-    console.log(r.Tviewport)
+    console.log(r.Tviewport) */
+    //console.log(r.model.geometry.vertices[0])
 
 
     this.flushFrameBuffer(r)

@@ -27,11 +27,11 @@ For instance:
   - [x] init the frame buffer by _black_ color (2p)
   - [x] init depth buffer by an appropriate value (2p)
 
-- Prepare transformation matrices (**total: 21p**)
-  - [ ] Init model matrix (6p)
-  - [ ] nit view matrix (6p)
-  - [ ] Init perspective matrix (6p)
-  - [ ] Init viewport matrix (3p)
+- Prepare transformation matrices TO BE PROVEN(**total: 21p**)
+  - [x] Init model matrix (6p)
+  - [x] nit view matrix (6p)
+  - [x] Init perspective matrix (6p)
+  - [x] Init viewport matrix (3p)
 
 - Prepare the needed informations for drawing (**total: 10p**)
   - [x] invoke needed initializations (1p)

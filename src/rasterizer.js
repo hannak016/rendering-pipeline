@@ -3,6 +3,7 @@
 
 import Vector from './vec'
 import Matrix from './mat'
+import { Font, OneMinusDstColorFactor, MaxEquation } from 'three'
 
 export default class Rasterizer {
   /**
@@ -192,35 +193,46 @@ export default class Rasterizer {
   render() {
     // TODO: initialization, and vertex generation, etc.
 
-    //init Buffer
-    this.initBuffers();
 
-    //tranform my obhect to the screen
-    this.initTransformation();
+    this.initBuffers();//prepare Buffer
+    this.initTransformation();//prepare needed matrices 
+
+
+
+    //outerloop()
 
     //vertex generation
+ 
+    //var vs = new Array();
+    //var face = new Array();
+    //var uvs = new Array();
+    //var vns = new Array();
+    //var tri = null;
 
     
-     {/*    
-    var vA = new Array();
+ /* this.model.geometry.faces//an 3 element Array,v[x,y,z]
+    this.model.geometry.faces//an 3 element Array,f[v1,v2,v3]
+    this.model.geometry.faceVertexUvs // an 3 element Array,f[uvv1,uvv2,uvv3]
+    this.model.vns */
 
-    var fA = new Array();
-    var uvA= new Array();
-    var nA= new Array();
+
+
+
+
+
+
+   // for every face
+    this.model.geometry.faces.forEach(f => {
+      this.draw(f,1,1);
+    });
     
 
-    readline();//?????
-    if('v'){vA.add()}
-    else if('u'){uvA.add()}
-    else if('vn'){nA.add()}
-    else if('f'){fA.add()}
-    this.draw(fA,uvA,nA);
-
-     */}
 
 
 
-    //call my two shaders
+
+
+    //Evetually, this methods stored all computed color in the frame buffer.
   
 
 
@@ -242,6 +254,28 @@ export default class Rasterizer {
   draw(tri, uvs, normals) {
     // TODO: implement a rendering pipeline.
 
+    //innerloop
+
+
+    //ZIEl: 
+    //1.giving the input:vertex coordinates and its uvs and normals
+    //2. draw this triangle 
+    
+    //daten bearbeiten pass sth to shader
+    
+
+
+    //all vetrices in this face up to date 
+    for(let i=1;i<tri.length;i++){
+      this.vertexShader(tri[i])
+    }
+
+
+
+
+  
+
+
   }
   /**
    * vertexShader is a shader that consumes a vertex then returns a vertex.
@@ -251,10 +285,18 @@ export default class Rasterizer {
    */
   vertexShader(vertex) {
     // TODO: transforms vertex from model space to projection space
-    //uniform 
-    //in
-    //out
 
+
+    const ver4 = new Vector(vertex,1);
+    const vModel = ver4.applyMatrix(this.Tmodel);
+    const vCam = vModel.applyMatrix(this.Tcamera);
+    const vPersp = vCam.applyMatrix(this.Tpersp);
+    //const vScreen = vPersp.applyMatrix(this.Tviewport);
+
+    vertex = vPersp;
+
+    
+    
 
   }
   /**
@@ -268,9 +310,38 @@ export default class Rasterizer {
    */
   fragmentShader(uv, normal, x) {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
-     //uniform 
-    //in
-    //out
+   
+ 
+    const ka = this.light.Kamb;
+    const kd = this.light.Kdiff;
+    const ks = this.light.Kspec;
 
+    const V =new Vector(this.camera.position-x);
+    V.normalize();
+    const LPos3 = [this.light.position.x,this.light.position.y,this.light.position.z]
+    const L= new Vector(this.vertexShader(LPos3),1);
+    L=L.sub(x);
+    L.normalize();
+    const H = L.add(V);
+    H.normalize();
+    //?const I=new Vector(this.etxture blablabla,uvcoordinates)
+    const I=(this.texture,uv);
+
+
+
+
+    const la = new Vector(ka,ka,ka,1)*I
+    const ld = new Vector(kd,kd,kd,1)*I*Math.max(0.0,normal.dot(L))
+    const ls = new Vector(ks,ks,ks,1)*I*Math.pow(Math.max(normal.dot(H),0.0),10)
+
+    
+
+
+    var outColor = la.add(ld).add(ls);
+
+
+    
+    return outColor;
+ 
   }
 }

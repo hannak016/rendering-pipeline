@@ -180,7 +180,7 @@ export default class Rasterizer {
 
     
     this.Tviewport = myTviewport;
-    //after applying Tviewpoint => model shows on screen
+    //after applying Tviewpoint => model from a cube [-1,1]*[-1,1]*[-1,1] to screen
 
 
   }

@@ -240,8 +240,10 @@ class Monitor extends Renderer {
     // check initBuffer() 
     //console.log(r.depthBuf)
     //check matrice
-    //console.log(r.Tmodel)
-    //console.log(r.Tcamera)
+    console.log(r.Tmodel)
+    console.log(r.Tcamera)
+    console.log(r.Tpersp)
+    console.log(r.Tviewport)
 
 
     this.flushFrameBuffer(r)

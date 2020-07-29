@@ -139,8 +139,14 @@ export default class Rasterizer {
 
 
 
+    //Tpersp
+    const aspect = this.camera.aspect;
+    const fov = this.camera.fov * Math.PI / 180
+    const n = this.camera.near;
+    const f = this.camera.far;
+    const r = - aspect * n * Math.tan(fov/2);
+    const t = - n * Math.tan(fov/2);
 
-    
     const myTpersp = new Matrix();
     //step1: Tortho
     const Tortho = new Matrix();
@@ -164,7 +170,7 @@ export default class Rasterizer {
 
 
 
-    //Tpersp
+/*   //Tpersp
     const aspect = this.camera.aspect;
     const s = Math.tan(this.camera.fov/2* Math.PI/180);
     const n = this.camera.near;
@@ -174,28 +180,17 @@ export default class Rasterizer {
     const b = -t;
     const l= -r;
 
-
-    
-
     const myTpersp = new Matrix();
-
-
     myTpersp.set(
       2*n/(r-l),0,(r+l)/(r-l),0,
       0,2*n/(t-b),	(t+b)/(t-b),0,
-
-
-
-
-//
       0,0,-(f+n)/(f-n),-2*n*f/(f-n),
       0,0,-1,0
     )
-	
-   
+	  
     this.Tpersp = myTpersp;
     //=> model is in 2D
-
+ */
 
 
     //Tviewport
@@ -231,7 +226,7 @@ export default class Rasterizer {
 
     //vertex generation
     //new Vector = (,1)
-    this.model.geometry.vertices[0]=new Vector(2,2,2,1)
+  
 
     this.vertexShader(this.model.geometry.vertices[0]);
     
@@ -356,6 +351,7 @@ export default class Rasterizer {
 
 
     var outColor = la.add(ld).add(ls);
+    //
 
 
     

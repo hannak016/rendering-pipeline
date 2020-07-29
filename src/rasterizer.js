@@ -3,7 +3,7 @@
 
 import Vector from './vec'
 import Matrix from './mat'
-import { Font, OneMinusDstColorFactor, MaxEquation } from 'three'
+
 
 export default class Rasterizer {
   /**
@@ -15,7 +15,7 @@ export default class Rasterizer {
   constructor(params) {
     this.screen = params.screen
     this.camera = {
-      position: new Vector(-550, 194, 734, 1),
+      position: new Vector(0,0,0,1),
       fov: 45, aspect: this.screen.width/this.screen.height,
       near: 100, far: 600,
       lookAt: new Vector(-1000, 0, 0, 1),
@@ -111,7 +111,7 @@ export default class Rasterizer {
     )
 
     this.Tmodel = myTmodel;
-    //after applying Tmodel => model at (0,0,0)
+    // => model at (0,0,0)
 
 
 
@@ -133,40 +133,42 @@ export default class Rasterizer {
     )
     
     this.Tcamera = myTcamera;
-    //after applying Tcamera => model's position is relative to the camera
+    //=> model's position is relative to the camera
 
 
 
 
     //Tpersp
-    let aspect = this.camera.aspect;
-    let fov = this.camera.fov * Math.PI / 180
-    let n = this.camera.near;
-    let f = this.camera.far;
-    let r = - aspect * n * Math.tan(fov/2);
-    let t = - n * Math.tan(fov/2);
+    const aspect = this.camera.aspect;
+    const s = Math.tan(this.camera.fov/2* Math.PI/180);
+    const n = this.camera.near;
+    const f = this.camera.far;
+    const r = -n*s*aspect;
+    const t = -ns;
+    const b = -t;
+    const l= -r;
 
+
+    
 
     const myTpersp = new Matrix();
-    //step1: Tortho
-    const Tortho = new Matrix();
-    Tortho.set(
-      1/r,0,0,0,
-      0,1/t,0,0,
-      0,0,2/(n-f),(f+n)/(f-n),
-      0,0,0,1
+
+
+    myTpersp.set(
+      2*n/(r-l),0,(r+l)/(r-l),0,
+      0,2*n/(t-b),	(t+b)/(t-b),0,
+
+
+
+
+//
+      0,0,-(f+n)/(f-n),-2*n*f/(f-n),
+      0,0,-1,0
     )
-    //step2:Tpo
-    const Tpo = new Matrix();
-    Tpo.set(
-      n,0,0,0,
-      0,n,0,0,
-      0,0,n+f,-n*f,
-      0,0,1,0
-    )
-    myTpersp.multiplyMatrices(Tortho,Tpo);
+	
+   
     this.Tpersp = myTpersp;
-    //after applying Tpersp => model is in 2D
+    //=> model is in 2D
 
 
 
@@ -181,7 +183,7 @@ export default class Rasterizer {
 
     
     this.Tviewport = myTviewport;
-    //after applying Tviewpoint => model from a cube [-1,1]*[-1,1]*[-1,1] to screen
+    // => model on screen
 
 
   }
@@ -202,14 +204,17 @@ export default class Rasterizer {
     //outerloop()
 
     //vertex generation
- 
-    //var vs = new Array();
-    //var face = new Array();
-    //var uvs = new Array();
-    //var vns = new Array();
-    //var tri = null;
+    //new Vector = (,1)
+    this.model.geometry.vertices[0]=new Vector(2,2,2,1)
+
+    this.vertexShader(this.model.geometry.vertices[0]);
+    
+
 
     
+ 
+
+
  /* this.model.geometry.faces//an 3 element Array,v[x,y,z]
     this.model.geometry.faces//an 3 element Array,f[v1,v2,v3]
     this.model.geometry.faceVertexUvs // an 3 element Array,f[uvv1,uvv2,uvv3]
@@ -221,11 +226,6 @@ export default class Rasterizer {
 
 
 
-   // for every face
-    this.model.geometry.faces.forEach(f => {
-      this.draw(f,1,1);
-    });
-    
 
 
 
@@ -234,10 +234,6 @@ export default class Rasterizer {
 
     //Evetually, this methods stored all computed color in the frame buffer.
   
-
-
-
-
 
 
 
@@ -257,20 +253,7 @@ export default class Rasterizer {
     //innerloop
 
 
-    //ZIEl: 
-    //1.giving the input:vertex coordinates and its uvs and normals
-    //2. draw this triangle 
     
-    //daten bearbeiten pass sth to shader
-    
-
-
-    //all vetrices in this face up to date 
-    for(let i=1;i<tri.length;i++){
-      this.vertexShader(tri[i])
-    }
-
-
 
 
   
@@ -286,16 +269,25 @@ export default class Rasterizer {
   vertexShader(vertex) {
     // TODO: transforms vertex from model space to projection space
 
+    //all right
 
-    const ver4 = new Vector(vertex,1);
-    const vModel = ver4.applyMatrix(this.Tmodel);
-    const vCam = vModel.applyMatrix(this.Tcamera);
-    const vPersp = vCam.applyMatrix(this.Tpersp);
-    //const vScreen = vPersp.applyMatrix(this.Tviewport);
+    console.log('original')
+    console.log(vertex)
 
-    vertex = vPersp;
+    vertex.applyMatrix(this.Tmodel);
+    console.log('to 000')
+    console.log(vertex)
 
+    vertex.applyMatrix(this.Tcamera);
+    console.log('to cam')
+    console.log(vertex)
+
+    vertex.applyMatrix(this.Tpersp);
+    console.log('projected')
+    console.log(vertex)
     
+    //not here
+    //vertex.applyMatrix(this.Tviewport);
     
 
   }

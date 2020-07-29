@@ -223,38 +223,70 @@ export default class Rasterizer {
 
 
     //outerloop()
-
-    //vertex generation
-    //new Vector = (,1)
-  
-
-    this.vertexShader(this.model.geometry.vertices[0]);
-    
-
+    //unit:each face
 
     
- 
+/*     vertex generation
+    --vertex position
+    --vertex uv
+    --vertex normal
+ */
 
 
- /* this.model.geometry.faces//an 3 element Array,v[x,y,z]
-    this.model.geometry.faces//an 3 element Array,f[v1,v2,v3]
-    this.model.geometry.faceVertexUvs // an 3 element Array,f[uvv1,uvv2,uvv3]
-    this.model.vns */
+    //for(let fI=0;fI<3;fI++){
+    for(let fI=0;fI<this.model.geometry.faces.length;fI++){
 
-
-
-
-
-
-
-
-
-
-
-
-
-    //Evetually, this methods stored all computed color in the frame buffer.
+        let finalVs = [];//tri
+        let finalUVs = [];
+        let finalNs = [];
+        
+        //vertice in face fI in vec3
+        let vListfIv3 =
+        [   this.model.geometry.vertices[this.model.geometry.faces[fI].a],
+            this.model.geometry.vertices[this.model.geometry.faces[fI].b],
+            this.model.geometry.vertices[this.model.geometry.faces[fI].c]
+        ]
+        //vertice in face fI in vec4
+        vListfIv3.forEach(e=>{
+          let vIn4 = new Vector(e.x,e.y,e.z,1);
+          finalVs.push(vIn4);
+        })
+        
+        
+        
+        //uv and normals
+        for(let vI=0;vI<3;vI++){
+        
+        
+        //uv of  vertex vI in fI
+        console.log(this.model.geometry.faceVertexUvs[fI][vI])
+        console.log(this.model.geometry.faceVertexUvs[fI][vI].x)
+        console.log(this.model.geometry.faceVertexUvs[fI][vI].y)
+        finalUVs.push(this.model.geometry.faceVertexUvs[fI][vI])
+        
+        
+        
+        //normal of first vertex  
+        console.log(this.model.geometry.faces[fI].vertexNormals[vI])
+        finalNs.push(this.model.geometry.faces[fI].vertexNormals[vI])
+        
+        
+        }
+        
+         //这一个面
+        this.draw(finalVs,finalUVs,finalNs)
+             
+        
+            //out computed color 
+            //update frameBuf
+            
+            
+      }
+    
   
+
+
+
 
 
 
@@ -273,11 +305,78 @@ export default class Rasterizer {
 
     //innerloop
 
+    //when 1 is solved,you have from vs:
+
+    //3 vertrices positions
+    //using positions to transform the vertices
+    tri.forEach(e=>this.vertexShader(e))
+
+
+
+
+
+/* 
+    //my culling approch
+
+    --calculate the normal for this face
+    let triN = crossVectors(v1.sub(v2),v2.sub(v3)).normalize()
+    --the angle between triN and the camera
+       --is negtive: do nothing 
+
+       --POSITIVE:calculate colours
+
+
+
+    ->
+    const cd = (this.camera.lookat.sub(this.camera.position)).normalize;
+    let a = triN.dot(cd)//a is cos 
+
+
+
+    if(a>0){
 
     
 
+    calculate colors:
+    ---barycentric center according the 3 vertrices
 
-  
+    ---every pixel's barycentrical coordinate(their weight)==>interpolate uv 
+
+
+    ??????? check how 
+    --pixelposition(interpolated),for:
+       --skipping (according to their b coor?) whose not in
+       --passing to fs
+
+
+    ??????? check how 
+
+    --pixelnormal(interpolated)
+
+
+
+
+
+
+
+    
+    
+
+
+    --depthBuf<=>x.z
+     ---if(depthBuf<?/>?x.z)//if true 
+     
+     
+     {
+
+      folien
+   
+    ---pass the pixel to framgmentshader：下面就是fs通过Blinn Phong 来确定最终的颜色了
+
+    this.fragmentShader(currentpixel.uv,currentpixel.n,currentpixel.pos)
+     }
+
+    } */
 
 
   }
@@ -323,6 +422,11 @@ export default class Rasterizer {
    */
   fragmentShader(uv, normal, x) {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
+
+
+    //有了这一个pixel的信息 uv 和 normal->颜色可以算出来了
+    //用 Blinn-Phong
+
    
  
     const ka = this.light.Kamb;
@@ -337,7 +441,7 @@ export default class Rasterizer {
     L.normalize();
     const H = L.add(V);
     H.normalize();
-    //?const I=new Vector(this.etxture blablabla,uvcoordinates)
+    //?const I=new Vector(uv,x)
     const I=(this.texture,uv);
 
 

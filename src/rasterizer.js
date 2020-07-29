@@ -118,7 +118,14 @@ export default class Rasterizer {
 
     //Tcamera
     const myTcamera = new Matrix();
-    const myZ = this.camera.position.sub(this.camera.lookAt).normalize();
+    let myZ = new Vector(
+      this.camera.position.x-this.camera.lookAt.x,
+      this.camera.position.y-this.camera.lookAt.y,
+      this.camera.position.z-this.camera.lookAt.z,
+      0
+    )
+    myZ.normalize();
+
     let myX = new Vector();
     myX.crossVectors(this.camera.up,myZ).normalize();
     let myY = new Vector();
@@ -131,6 +138,8 @@ export default class Rasterizer {
       myX.z,myY.z,myZ.z,0,
       0,0,0,1 
     )
+
+    console.log(myTcamera)
     
     this.Tcamera = myTcamera;
     //=> model's position is relative to the camera
@@ -225,20 +234,23 @@ export default class Rasterizer {
     //outerloop()
     //unit:each face
 
-    
+
 /*     vertex generation
     --vertex position
     --vertex uv
     --vertex normal
  */
 
+    //test for face 1
+    for(let fI=0;fI<1;fI++){
 
-    //for(let fI=0;fI<3;fI++){
-    for(let fI=0;fI<this.model.geometry.faces.length;fI++){
+    //for all faces
+    //for(let fI=0;fI<this.model.geometry.faces.length;fI++){
 
-        let finalVs = [];//tri
+        let finalVs = [];
         let finalUVs = [];
-        let finalNs = [];
+        let finalVNs = [];
+        
         
         //vertice in face fI in vec3
         let vListfIv3 =
@@ -252,33 +264,49 @@ export default class Rasterizer {
           finalVs.push(vIn4);
         })
         
+
+
         
+         
         
         //uv and normals
         for(let vI=0;vI<3;vI++){
         
         
-        //uv of  vertex vI in fI
-        console.log(this.model.geometry.faceVertexUvs[fI][vI])
-        console.log(this.model.geometry.faceVertexUvs[fI][vI].x)
-        console.log(this.model.geometry.faceVertexUvs[fI][vI].y)
-        finalUVs.push(this.model.geometry.faceVertexUvs[fI][vI])
+        //uv of vertex vI in fI
+        
+/*         console.log(this.model.geometry.faceVertexUvs[0][fI])
+        console.log(this.model.geometry.faceVertexUvs[0][fI][vI]) */
+        finalUVs.push(this.model.geometry.faceVertexUvs[0][fI][vI])
+  
+        //normal of first vertex 
+        let n4 = new Vector(
+          this.model.geometry.faces[fI].vertexNormals[vI].x,
+          this.model.geometry.faces[fI].vertexNormals[vI].y,
+          this.model.geometry.faces[fI].vertexNormals[vI].z,
+          0
+        )
+        finalVNs.push(n4)
+
+
+
+    
         
         
         
-        //normal of first vertex  
-        console.log(this.model.geometry.faces[fI].vertexNormals[vI])
-        finalNs.push(this.model.geometry.faces[fI].vertexNormals[vI])
+        } 
+        console.log(finalVs)
+        console.log(finalUVs)
+        console.log(finalVNs)
         
         
-        }
         
-         //这一个面
-        this.draw(finalVs,finalUVs,finalNs)
-             
-        
-            //out computed color 
-            //update frameBuf
+       
+
+        //for this face
+        this.draw(finalVs,finalUVs,finalVNs)
+        //out computed color 
+        //update frameBuf
             
             
       }
@@ -304,34 +332,104 @@ export default class Rasterizer {
     // TODO: implement a rendering pipeline.
 
     //innerloop
+    //unit: pixel
 
-    //when 1 is solved,you have from vs:
+
+    let myfaceN = new Vector();
+    let v01=tri[0].sub(tri[1]);
+    let v12=tri[1].sub(tri[2]);
+    v01.normalize();
+    v12.normalize();
+    console.log(v01);
+    myfaceN.crossVectors(v01,v12).normalize();
+    console.log(myfaceN);
+    console.log(this.model.geometry.faces[0].normal)
+    //在geometry验证过了，是对的
+    this.vertexShader(myfaceN);
+
+    console.log(myfaceN);
+
+
 
     //3 vertrices positions
     //using positions to transform the vertices
-    tri.forEach(e=>this.vertexShader(e))
+    tri.forEach(e=>{this.vertexShader(e)})
+
+    //calculate barycenter here
+    //based on vertex' positions
+
+
+
+    
+    
+    
+
+
+
+
+
+ 
+    //my culling approch
+
+
+    //this face's normal 
+ 
 
 
 
 
 
 /* 
-    //my culling approch
-
-    --calculate the normal for this face
-    let triN = crossVectors(v1.sub(v2),v2.sub(v3)).normalize()
-    --the angle between triN and the camera
+    --the angle between myfaceN and the camera
        --is negtive: do nothing 
 
        --POSITIVE:calculate colours
+*/
+
+    
+    
+    
+    const  camDir = new Vector(
+      this.camera.position.x-this.camera.lookAt.x,
+      this.camera.position.y-this.camera.lookAt.y,
+      this.camera.position.z-this.camera.lookAt.z,
+      0
+    )
+
+    console.log(this.camera.position)
+    console.log(this.camera.lookAt)
+    camDir.normalize();
+    console.log(camDir);
+
+    let cosTheta = myfaceN.dot(camDir)//theta is cos 
+
+    if(cosTheta>0){
+      //backface culling
+
+      //draw this face
+      
 
 
 
-    ->
-    const cd = (this.camera.lookat.sub(this.camera.position)).normalize;
-    let a = triN.dot(cd)//a is cos 
+
+      //come here, all
+
+      //generate pixel using vs
+      
 
 
+
+
+
+
+
+
+
+
+
+    }
+
+/*
 
     if(a>0){
 
@@ -391,20 +489,21 @@ export default class Rasterizer {
 
     //all right
 
-    console.log('original')
-    console.log(vertex)
+    //console.log('original')
+    //console.log(vertex)
 
     vertex.applyMatrix(this.Tmodel);
-    console.log('to 000')
-    console.log(vertex)
+    //console.log('to 000')
+    //console.log(vertex)
 
     vertex.applyMatrix(this.Tcamera);
-    console.log('to cam')
-    console.log(vertex)
+    //console.log('to cam')
+    //console.log(vertex)
 
     vertex.applyMatrix(this.Tpersp);
-    console.log('projected')
-    console.log(vertex)
+    //console.log('projected')
+    //console.log(vertex)
+    console.log('hooo')
     
     //not here
     //vertex.applyMatrix(this.Tviewport);

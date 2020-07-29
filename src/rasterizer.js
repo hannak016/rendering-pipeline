@@ -15,7 +15,7 @@ export default class Rasterizer {
   constructor(params) {
     this.screen = params.screen
     this.camera = {
-      position: new Vector(0,0,0,1),
+      position: new Vector(-550, 194, 734, 1),
       fov: 45, aspect: this.screen.width/this.screen.height,
       near: 100, far: 600,
       lookAt: new Vector(-1000, 0, 0, 1),
@@ -134,6 +134,32 @@ export default class Rasterizer {
     
     this.Tcamera = myTcamera;
     //=> model's position is relative to the camera
+
+
+
+
+
+
+    
+    const myTpersp = new Matrix();
+    //step1: Tortho
+    const Tortho = new Matrix();
+    Tortho.set(
+      1/r,0,0,0,
+      0,1/t,0,0,
+      0,0,2/(n-f),(f+n)/(f-n),
+      0,0,0,1
+    )
+    //step2:Tpo
+    const Tpo = new Matrix();
+    Tpo.set(
+      n,0,0,0,
+      0,n,0,0,
+      0,0,n+f,-n*f,
+      0,0,1,0
+    )
+    myTpersp.multiplyMatrices(Tortho,Tpo);
+    this.Tpersp = myTpersp;
 
 
 

@@ -301,6 +301,17 @@ export default class Rasterizer {
     //unit: pixel
 
 
+
+
+
+ 
+    //my culling approch
+
+
+    
+ 
+
+
     let v01 = new Vector(
       tri[0].x-tri[1].x,
       tri[0].y-tri[1].y,
@@ -352,9 +363,6 @@ export default class Rasterizer {
    
   */}
 
-
-
-
   //normal of this face: calculating here instead of from geometry attribute cuz the parameter passing limit
 
 
@@ -370,67 +378,22 @@ export default class Rasterizer {
     console.log(this.model.geometry.faces[0].normal) */
 }
 
-
-
-    /* 
-    this.vertexShader(myfaceN);
-
-    console.log(myfaceN); */
-    //console.log(myfaceN)
+  // to camera pos 
     myfaceN.applyMatrix(this.Tmodel);
-    //console.log(myfaceN)
     myfaceN.applyMatrix(this.Tcamera);
-    //console.log(myfaceN);
-    
+    //test: pass
+    {
 
 
+           /*  //console.log(myfaceN)
+            myfaceN.applyMatrix(this.Tmodel);
+            //console.log(myfaceN)
+            myfaceN.applyMatrix(this.Tcamera);
+            //console.log(myfaceN); */
+    }
 
+  //and see the angel
 
-    //transform the vertices
-    tri.forEach(e=>{this.vertexShader(e)})
-    //test:pass
-{/*     console.log(tri[0]);
-
-    tri.forEach(e=>{this.vertexShader(e)})
-console.log(tri[0]); */}
-
-
-
-
-    //calculate barycenter here
-    //based on vertex' positions
-
-
-
-    
-    
-    
-
-
-
-
-
- 
-    //my culling approch
-
-
-    //this face's normal 
- 
-
-
-
-
-
-/* 
-    --the angle between myfaceN and the camera
-       --is negtive: do nothing 
-
-       --POSITIVE:calculate colours
-*/
-
-    
-    
-    
     const  camDir = new Vector(
       this.camera.position.x-this.camera.lookAt.x,
       this.camera.position.y-this.camera.lookAt.y,
@@ -441,22 +404,40 @@ console.log(tri[0]); */}
     console.log(this.camera.position)
     console.log(this.camera.lookAt) */
     camDir.normalize();
-    console.log(camDir);
+    //console.log(camDir);
     //console.log(myfaceN)
 /*   //safe
     console.log(this.camera.position)
     console.log(this.camera.lookAt)
  */
 
+    let cosTheta = myfaceN.dot(camDir)
 
-
-    //let cosTheta = myfaceN.dot(camDir)//theta is cos 
-
-    //if(cosTheta>0){
-      //backface culling
+    //backface culling
+    if(cosTheta>0){
+      
 
       //draw this face
       
+      
+      
+      //transform the vertices
+    tri.forEach(e=>{this.vertexShader(e)})
+    //test:pass
+{/*     console.log(tri[0]);
+
+    tri.forEach(e=>{this.vertexShader(e)})
+console.log(tri[0]); */}
+
+
+
+
+
+
+
+    //calculate barycenter here
+    //based on vertex' positions
+
 
 
 
@@ -529,7 +510,7 @@ console.log(tri[0]); */}
 
     } */
 
-
+  }
   }
   /**
    * vertexShader is a shader that consumes a vertex then returns a vertex.

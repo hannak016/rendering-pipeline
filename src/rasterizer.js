@@ -376,11 +376,11 @@ export default class Rasterizer {
     this.vertexShader(myfaceN);
 
     console.log(myfaceN); */
-    console.log(myfaceN)
+    //console.log(myfaceN)
     myfaceN.applyMatrix(this.Tmodel);
-    console.log(myfaceN)
+    //console.log(myfaceN)
     myfaceN.applyMatrix(this.Tcamera);
-    console.log(myfaceN);
+    //console.log(myfaceN);
     
 
 
@@ -543,16 +543,16 @@ console.log(tri[0]); */}
     //all right
 
 /*     console.log('original')
-    console.log(vertex)
- */
+    console.log(vertex) */
+
     vertex.applyMatrix(this.Tmodel);
 /*     console.log('to 000')
     console.log(vertex) */
 
     vertex.applyMatrix(this.Tcamera);
 /*     console.log('to cam')
-    console.log(vertex)
- */
+    console.log(vertex) */
+
     vertex.applyMatrix(this.Tpersp);
 /*     console.log('projected')
     console.log(vertex) */

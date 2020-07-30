@@ -113,18 +113,6 @@ export default class Rasterizer {
     this.Tmodel = myTmodel;
     // => model at (0,0,0)
 
-// Tmodel is right, but the result....
-/*     console.log(this.myTmodel)
-    console.log(this.Tmodel)
-
-    let tt =new Vector( -0.910323821202561,  0.3934034445356127, -0.12862453256934675,  0);
-    tt.applyMatrix(this.Tmodel);
-    console.log(tt)
-    console.log(this.Tmodel) */
-
-
-
-
     //Tcamera
     const myTcamera = new Matrix();
     let myZ = new Vector(
@@ -230,8 +218,8 @@ export default class Rasterizer {
     --vertex normals
  */
 
-    //test for face 1
-    for(let fI=0;fI<1;fI++){
+    //test for 10 faces 
+    for(let fI=0;fI<10;fI++){
 
     //for all faces
     //for(let fI=0;fI<this.model.geometry.faces.length;fI++){
@@ -297,20 +285,7 @@ export default class Rasterizer {
   draw(tri, uvs, normals) {
     // TODO: implement a rendering pipeline.
 
-    //innerloop
-    //unit: pixel
-
-
-
-
-
- 
     //my culling approch
-
-
-    
- 
-
 
     let v01 = new Vector(
       tri[0].x-tri[1].x,
@@ -324,8 +299,6 @@ export default class Rasterizer {
       tri[1].y-tri[2].y,
       tri[1].z-tri[2].z,
       0)
-
-
     //test: pass
     //safe from sub() side effect
     {
@@ -347,9 +320,9 @@ export default class Rasterizer {
   }
 
 
+
     v01.normalize();
-    v12.normalize();
-     
+    v12.normalize();  
   //test: pass 
   {/*
     console.log(v01)
@@ -365,11 +338,8 @@ export default class Rasterizer {
 
   //normal of this face: calculating here instead of from geometry attribute cuz the parameter passing limit
 
-
     let myfaceN = new Vector();
     myfaceN.crossVectors(v01,v12).normalize();
-
-
   //test:pass
 {
 /*     let myfaceN = new Vector();
@@ -378,7 +348,7 @@ export default class Rasterizer {
     console.log(this.model.geometry.faces[0].normal) */
 }
 
-  // to camera pos 
+  // to camera pos without moving th evertrices yet
     myfaceN.applyMatrix(this.Tmodel);
     myfaceN.applyMatrix(this.Tcamera);
     //test: pass
@@ -400,41 +370,135 @@ export default class Rasterizer {
       this.camera.position.z-this.camera.lookAt.z,
       0
     )
-/* //safe
-    console.log(this.camera.position)
-    console.log(this.camera.lookAt) */
     camDir.normalize();
-    //console.log(camDir);
-    //console.log(myfaceN)
-/*   //safe
-    console.log(this.camera.position)
-    console.log(this.camera.lookAt)
- */
+ //safe
+ 
 
-    let cosTheta = myfaceN.dot(camDir)
+    
 
     //backface culling
+    let cosTheta = myfaceN.dot(camDir)
     if(cosTheta>0){
       //draw this face
       
     
       //transform the vertices on screen 
       
-    tri.forEach(e=>{this.vertexShader(e)})
-      //test:pass
-      {/*     console.log(tri[0]);
+    tri.forEach(e=>{
+      this.vertexShader(e);
+      //e.x=Math.floor(e.x);
+      //e.y=Math.floor(e.y);
+      //e.z=Math.floor(e.z);
+    })
 
-    tri.forEach(e=>{this.vertexShader(e)})
-       console.log(tri[0]); */}
-
-       //to screen
-
-       //now 2D triangel
-
-  
+    console.log(tri)
 
 
-       //generate every pixel in this 2D tri 
+
+    let myBox = {
+
+      xmax:Math.max(tri[0].x, tri[2].x, tri[2].x),
+      xmin:Math.min(tri[0].x, tri[2].x, tri[2].x),
+      ymax:Math.max(tri[0].y, tri[2].y, tri[2].y),
+      ymin:Math.min(tri[0].y, tri[2].y, tri[2].y),
+      zmax:Math.max(tri[0].z, tri[2].z, tri[2].z),
+      zmin:Math.min(tri[0].z, tri[2].z, tri[2].z),
+
+
+    }
+
+
+
+
+//for test
+    for(let x=myBox.xmin;x<myBox.xmin+2;x++){
+      for(let y=myBox.ymin;y<myBox.ymin+2;y++){
+       for(let z=myBox.zmin;z<myBox.zmin+2;z++){
+
+
+        let P = new Vector(x,y,z,0);
+
+        let PN=new Vector();
+
+        let PUV;
+        
+
+        
+//loop all version
+/*     for(let x=myBox.xmin;x<myBox.xmax;x++){
+      for(let y=myBox.ymin;y<myBox.ymax;y++){
+       for(let z=myBox.zmin;z<myBox.zmax;z++){ */
+
+        
+         const _v20=new Vector(
+           tri[2].x-tri[0].x,
+           tri[2].y-tri[0].y,
+           tri[2].z-tri[0].z,
+           0
+         );
+
+         const _v10=new Vector(
+          tri[1].x-tri[0].x,
+          tri[1].y-tri[0].y,
+          tri[1].z-tri[0].z,
+          0
+        );
+
+
+        const _vp0=new Vector(
+          P.x-tri[0].x,
+          P.y-tri[0].y,
+          P.z-tri[0].z,
+          0
+        );
+
+
+		const dot00 = _v20.dot( _v20 );
+		const dot01 = _v20.dot( _v10 );
+		const dot02 = _v20.dot( _vp0 );
+		const dot11 = _v10.dot( _v10 );
+		const dot12 = _v10.dot( _vp0 );
+
+		const denom = ( dot00 * dot11 - dot01 * dot01 );
+
+	  if(denom!==0){
+		
+		const u = ( dot11 * dot02 - dot01 * dot12 ) / denom
+    const v = ( dot00 * dot12 - dot01 * dot02 ) / denom
+    
+
+    //bc coordinates to be use for interpolate
+    let PBC = new Vector(1 - u - v, v, u, 0);
+    console.log(PBC)
+ 
+
+ 
+    PUV.x = uvs[0].x*(1-u-v)+uvs[1].x*v+uvs[2].x*u
+    PUV.y = uvs[0].y*(1-u-v)+uvs[1].y*v+uvs[2].y*u
+
+
+
+    PN.x=normals[0].x*(1-u-v)+normals[1].x*v+normals[2].x*u;
+    PN.y=normals[0].y*(1-u-v)+normals[1].y*v+normals[2].y*u;
+    PN.z=normals[0].z*(1-u-v)+normals[1].z*v+normals[2].z*u;
+    
+
+//fs here
+    //this.fragmentShader(PUV,PN,P);
+
+
+
+  }
+       }
+      }
+    }
+   
+       
+
+
+      
+       
+       
        
 
     /*calculate colors:
@@ -488,9 +552,9 @@ export default class Rasterizer {
   vertexShader(vertex) {
     // TODO: transforms vertex from model space to projection space
 
-    //all right
-
-/*     console.log('original')
+    
+/* 
+    console.log('original')
     console.log(vertex) */
 
     vertex.applyMatrix(this.Tmodel);
@@ -502,10 +566,15 @@ export default class Rasterizer {
     console.log(vertex) */
 
     vertex.applyMatrix(this.Tpersp);
-/*     console.log('projected')
+ /*    console.log('projected')
+    console.log(vertex) */
+
+    vertex.applyMatrix(this.Tviewport)
+
+   /*    console.log('on screen')
     console.log(vertex) */
     
-    vertex.applyMatrix(this.Tviewport);
+   
     
 
   }
@@ -522,11 +591,9 @@ export default class Rasterizer {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
 
 
-    //有了这一个pixel的信息 uv 和 normal->颜色可以算出来了
-    //用 Blinn-Phong
-
-   
- 
+    //Blinn-Phong
+    
+    //todo: query the color
     const ka = this.light.Kamb;
     const kd = this.light.Kdiff;
     const ks = this.light.Kspec;
@@ -549,15 +616,16 @@ export default class Rasterizer {
     const ld = new Vector(kd,kd,kd,1)*I*Math.max(0.0,normal.dot(L))
     const ls = new Vector(ks,ks,ks,1)*I*Math.pow(Math.max(normal.dot(H),0.0),10)
 
-    
+    //depthBuf
+    //frameBuf
 
+    let outColor = la.add(ld).add(ls);
 
-    var outColor = la.add(ld).add(ls);
-    //
+    if(x.z<this.depthBuf){
+      this.depthBuf[x.x*x.y]=x.z;
+      this.frameBuf[x.x*x.y]=outColor;
+    }
 
-
-    
-    return outColor;
  
   }
 }

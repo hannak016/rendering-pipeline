@@ -4,6 +4,7 @@
 import Vector from './vec'
 import Matrix from './mat'
 
+
 export default class Rasterizer {
   /**
    * constructor creates all properties of a Rasterizer.
@@ -101,8 +102,8 @@ export default class Rasterizer {
     // TODO: prepare transformation matrices
 
     //Tmodel
-    const myTmodel = new Matrix(); 
-    myTmodel.set(
+    const myTmodel = new Matrix();
+    myTmodel.set( 
       this.model.scale.x,0,0,-this.model.position.x,
       0,this.model.scale.y,0,-this.model.position.y,
       0,0,this.model.scale.z,-this.model.position.z,
@@ -110,14 +111,30 @@ export default class Rasterizer {
     )
 
     this.Tmodel = myTmodel;
-    //after applying Tmodel => model at (0,0,0)
+    // => model at (0,0,0)
+
+// Tmodel is right, but the result....
+/*     console.log(this.myTmodel)
+    console.log(this.Tmodel)
+
+    let tt =new Vector( -0.910323821202561,  0.3934034445356127, -0.12862453256934675,  0);
+    tt.applyMatrix(this.Tmodel);
+    console.log(tt)
+    console.log(this.Tmodel) */
 
 
 
 
     //Tcamera
     const myTcamera = new Matrix();
-    const myZ = this.camera.position.sub(this.camera.lookAt).normalize();
+    let myZ = new Vector(
+      this.camera.position.x-this.camera.lookAt.x,
+      this.camera.position.y-this.camera.lookAt.y,
+      this.camera.position.z-this.camera.lookAt.z,
+      0
+    )
+    myZ.normalize();
+
     let myX = new Vector();
     myX.crossVectors(this.camera.up,myZ).normalize();
     let myY = new Vector();
@@ -130,23 +147,24 @@ export default class Rasterizer {
       myX.z,myY.z,myZ.z,0,
       0,0,0,1 
     )
+
     
     this.Tcamera = myTcamera;
-    //after applying Tcamera => model's position is relative to the camera
+    //=> model's position is relative to the camera
+
 
 
 
 
     //Tpersp
-    let aspect = this.camera.aspect;
-    let fov = this.camera.fov * Math.PI / 180
-    let n = this.camera.near;
-    let f = this.camera.far;
-    let r = - aspect * n * Math.tan(fov/2);
-    let t = - n * Math.tan(fov/2);
+    const aspect = this.camera.aspect;
+    const fov = this.camera.fov * Math.PI / 180
+    const n = this.camera.near;
+    const f = this.camera.far;
+    const r = - aspect * n * Math.tan(fov/2);
+    const t = - n * Math.tan(fov/2);
 
-
-    const myTpersp = new Matrix();
+    
     //step1: Tortho
     const Tortho = new Matrix();
     Tortho.set(
@@ -163,9 +181,15 @@ export default class Rasterizer {
       0,0,n+f,-n*f,
       0,0,1,0
     )
+
+    const myTpersp = new Matrix();
     myTpersp.multiplyMatrices(Tortho,Tpo);
+
+
     this.Tpersp = myTpersp;
-    //after applying Tpersp => model is in 2D
+    //=> model is in 2D
+ 
+
 
 
 
@@ -180,7 +204,7 @@ export default class Rasterizer {
 
     
     this.Tviewport = myTviewport;
-    //after applying Tviewpoint => model from a cube [-1,1]*[-1,1]*[-1,1] to screen
+    // => model on screen
 
 
   }
@@ -192,43 +216,74 @@ export default class Rasterizer {
   render() {
     // TODO: initialization, and vertex generation, etc.
 
-    //init Buffer
-    this.initBuffers();
 
-    //tranform my obhect to the screen
-    this.initTransformation();
-
-    //vertex generation
-
-    
-     {/*    
-    var vA = new Array();
-
-    var fA = new Array();
-    var uvA= new Array();
-    var nA= new Array();
-    
-
-    readline();//?????
-    if('v'){vA.add()}
-    else if('u'){uvA.add()}
-    else if('vn'){nA.add()}
-    else if('f'){fA.add()}
-    this.draw(fA,uvA,nA);
-
-     */}
+    this.initBuffers();//prepare Buffer
+    this.initTransformation();//prepare needed matrices 
 
 
+    //outerloop()
+    //unit:each face
 
-    //call my two shaders
+/*     vertex generation
+    --vertex positions
+    --vertex uvs
+    --vertex normals
+ */
+
+    //test for face 1
+    for(let fI=0;fI<1;fI++){
+
+    //for all faces
+    //for(let fI=0;fI<this.model.geometry.faces.length;fI++){
+
+      let finalVs = [];
+      let finalUVs = [];
+      let finalVNs = [];
+        
+        
+        //vertice in face fI in vec3
+      let vListfIv3 =
+      [   this.model.geometry.vertices[this.model.geometry.faces[fI].a],
+          this.model.geometry.vertices[this.model.geometry.faces[fI].b],
+          this.model.geometry.vertices[this.model.geometry.faces[fI].c]
+      ]
+        //vertice in face fI in vec4
+      vListfIv3.forEach(e=>{
+        let vIn4 = new Vector(e.x,e.y,e.z,1);
+        finalVs.push(vIn4);
+      })
+        
+   
+        //uv and normals
+      for(let vI=0;vI<3;vI++){
+        
+        
+      //uv of vertex vI in fI
+      finalUVs.push(this.model.geometry.faceVertexUvs[0][fI][vI])
+      /*    console.log(this.model.geometry.faceVertexUvs[0][fI])
+      console.log(this.model.geometry.faceVertexUvs[0][fI][vI]) */
   
 
 
+      //normal of 1 vertex 
+      let n4 = new Vector(
+        this.model.geometry.faces[fI].vertexNormals[vI].x,
+        this.model.geometry.faces[fI].vertexNormals[vI].y,
+        this.model.geometry.faces[fI].vertexNormals[vI].z,
+        0
+      )
+      //normals of 3 vertrices
+      finalVNs.push(n4) 
+        
+      } 
+      console.log(finalVs)
+      console.log(finalUVs)
+      console.log(finalVNs)
 
-
-
-
-
+      //for this face
+      this.draw(finalVs,finalUVs,finalVNs)
+    
+    }
 
   }
   /**
@@ -242,6 +297,239 @@ export default class Rasterizer {
   draw(tri, uvs, normals) {
     // TODO: implement a rendering pipeline.
 
+    //innerloop
+    //unit: pixel
+
+
+    let v01 = new Vector(
+      tri[0].x-tri[1].x,
+      tri[0].y-tri[1].y,
+      tri[0].z-tri[1].z,
+      0);
+    
+
+    let v12 = new Vector(
+      tri[1].x-tri[2].x,
+      tri[1].y-tri[2].y,
+      tri[1].z-tri[2].z,
+      0)
+
+
+    //test: pass
+    //safe from sub() side effect
+    {
+/*       console.log(tri[1])
+      
+      let v01 = new Vector(
+      tri[0].x-tri[1].x,
+      tri[0].y-tri[1].y,
+      tri[0].z-tri[1].z,
+      0);
+    
+
+    let v12 = new Vector(
+      tri[1].x-tri[2].x,
+      tri[1].y-tri[2].y,
+      tri[1].z-tri[2].z,
+      0)
+    console.log(tri[1]) */
+  }
+
+
+    v01.normalize();
+    v12.normalize();
+     
+  //test: pass 
+  {/*
+    console.log(v01)
+    console.log(v12)
+
+    v01.normalize();
+    v12.normalize();
+
+    console.log(v01)
+    console.log(v12)
+   
+  */}
+
+
+
+
+  //normal of this face: calculating here instead of from geometry attribute cuz the parameter passing limit
+
+
+    let myfaceN = new Vector();
+    myfaceN.crossVectors(v01,v12).normalize();
+
+
+  //test:pass
+{
+/*     let myfaceN = new Vector();
+    myfaceN.crossVectors(v01,v12).normalize();
+    console.log(myfaceN);
+    console.log(this.model.geometry.faces[0].normal) */
+}
+
+
+
+    /* 
+    this.vertexShader(myfaceN);
+
+    console.log(myfaceN); */
+    //console.log(myfaceN)
+    myfaceN.applyMatrix(this.Tmodel);
+    //console.log(myfaceN)
+    myfaceN.applyMatrix(this.Tcamera);
+    //console.log(myfaceN);
+    
+
+
+
+
+    //transform the vertices
+    tri.forEach(e=>{this.vertexShader(e)})
+    //test:pass
+{/*     console.log(tri[0]);
+
+    tri.forEach(e=>{this.vertexShader(e)})
+console.log(tri[0]); */}
+
+
+
+
+    //calculate barycenter here
+    //based on vertex' positions
+
+
+
+    
+    
+    
+
+
+
+
+
+ 
+    //my culling approch
+
+
+    //this face's normal 
+ 
+
+
+
+
+
+/* 
+    --the angle between myfaceN and the camera
+       --is negtive: do nothing 
+
+       --POSITIVE:calculate colours
+*/
+
+    
+    
+    
+    const  camDir = new Vector(
+      this.camera.position.x-this.camera.lookAt.x,
+      this.camera.position.y-this.camera.lookAt.y,
+      this.camera.position.z-this.camera.lookAt.z,
+      0
+    )
+/* //safe
+    console.log(this.camera.position)
+    console.log(this.camera.lookAt) */
+    camDir.normalize();
+    console.log(camDir);
+    //console.log(myfaceN)
+/*   //safe
+    console.log(this.camera.position)
+    console.log(this.camera.lookAt)
+ */
+
+
+
+    //let cosTheta = myfaceN.dot(camDir)//theta is cos 
+
+    //if(cosTheta>0){
+      //backface culling
+
+      //draw this face
+      
+
+
+
+
+      //come here, all
+
+      //generate pixel using vs
+      
+
+
+
+
+
+
+
+
+
+
+
+    //}
+
+/*
+
+    if(a>0){
+
+    
+
+    calculate colors:
+    ---barycentric center according the 3 vertrices
+
+    ---every pixel's barycentrical coordinate(their weight)==>interpolate uv 
+
+
+    ??????? check how 
+    --pixelposition(interpolated),for:
+       --skipping (according to their b coor?) whose not in
+       --passing to fs
+
+
+    ??????? check how 
+
+    --pixelnormal(interpolated)
+
+
+
+
+
+
+
+    
+    
+
+
+    --depthBuf<=>x.z
+     ---if(depthBuf<?/>?x.z)//if true 
+     
+     
+     {
+
+      folien
+   
+    ---pass the pixel to framgmentshader：下面就是fs通过Blinn Phong 来确定最终的颜色了
+
+    this.fragmentShader(currentpixel.uv,currentpixel.n,currentpixel.pos)
+    ---update frameBuf    
+        
+        
+        
+     }
+
+    } */
+
+
   }
   /**
    * vertexShader is a shader that consumes a vertex then returns a vertex.
@@ -251,10 +539,28 @@ export default class Rasterizer {
    */
   vertexShader(vertex) {
     // TODO: transforms vertex from model space to projection space
-    //uniform 
-    //in
-    //out
 
+    //all right
+
+/*     console.log('original')
+    console.log(vertex) */
+
+    vertex.applyMatrix(this.Tmodel);
+/*     console.log('to 000')
+    console.log(vertex) */
+
+    vertex.applyMatrix(this.Tcamera);
+/*     console.log('to cam')
+    console.log(vertex) */
+
+    vertex.applyMatrix(this.Tpersp);
+/*     console.log('projected')
+    console.log(vertex) */
+    
+    
+    //not here
+    //vertex.applyMatrix(this.Tviewport);
+    
 
   }
   /**
@@ -268,9 +574,44 @@ export default class Rasterizer {
    */
   fragmentShader(uv, normal, x) {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
-     //uniform 
-    //in
-    //out
 
+
+    //有了这一个pixel的信息 uv 和 normal->颜色可以算出来了
+    //用 Blinn-Phong
+
+   
+ 
+    const ka = this.light.Kamb;
+    const kd = this.light.Kdiff;
+    const ks = this.light.Kspec;
+
+    const V =new Vector(this.camera.position-x);
+    V.normalize();
+    const LPos3 = [this.light.position.x,this.light.position.y,this.light.position.z]
+    const L= new Vector(this.vertexShader(LPos3),1);
+    L=L.sub(x);
+    L.normalize();
+    const H = L.add(V);
+    H.normalize();
+    //?const I=new Vector(uv,x)
+    const I=(this.texture,uv);
+
+
+
+
+    const la = new Vector(ka,ka,ka,1)*I
+    const ld = new Vector(kd,kd,kd,1)*I*Math.max(0.0,normal.dot(L))
+    const ls = new Vector(ks,ks,ks,1)*I*Math.pow(Math.max(normal.dot(H),0.0),10)
+
+    
+
+
+    var outColor = la.add(ld).add(ls);
+    //
+
+
+    
+    return outColor;
+ 
   }
 }

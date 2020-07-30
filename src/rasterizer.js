@@ -276,9 +276,9 @@ export default class Rasterizer {
       finalVNs.push(n4) 
         
       } 
-      console.log(finalVs)
+/*       console.log(finalVs)
       console.log(finalUVs)
-      console.log(finalVNs)
+      console.log(finalVNs) */
 
       //for this face
       this.draw(finalVs,finalUVs,finalVNs)
@@ -415,57 +415,29 @@ export default class Rasterizer {
 
     //backface culling
     if(cosTheta>0){
-      
-
       //draw this face
       
-      
-      
-      //transform the vertices
-    tri.forEach(e=>{this.vertexShader(e)})
-    //test:pass
-{/*     console.log(tri[0]);
-
-    tri.forEach(e=>{this.vertexShader(e)})
-console.log(tri[0]); */}
-
-
-
-
-
-
-
-    //calculate barycenter here
-    //based on vertex' positions
-
-
-
-
-
-      //come here, all
-
-      //generate pixel using vs
-      
-
-
-
-
-
-
-
-
-
-
-
-    //}
-
-/*
-
-    if(a>0){
-
     
+      //transform the vertices on screen 
+      
+    tri.forEach(e=>{this.vertexShader(e)})
+      //test:pass
+      {/*     console.log(tri[0]);
 
-    calculate colors:
+    tri.forEach(e=>{this.vertexShader(e)})
+       console.log(tri[0]); */}
+
+       //to screen
+
+       //now 2D triangel
+
+  
+
+
+       //generate every pixel in this 2D tri 
+       
+
+    /*calculate colors:
     ---barycentric center according the 3 vertrices
 
     ---every pixel's barycentrical coordinate(their weight)==>interpolate uv 
@@ -480,15 +452,6 @@ console.log(tri[0]); */}
     ??????? check how 
 
     --pixelnormal(interpolated)
-
-
-
-
-
-
-
-    
-    
 
 
     --depthBuf<=>x.z
@@ -509,6 +472,10 @@ console.log(tri[0]); */}
      }
 
     } */
+ 
+
+
+   
 
   }
   }
@@ -538,9 +505,7 @@ console.log(tri[0]); */}
 /*     console.log('projected')
     console.log(vertex) */
     
-    
-    //not here
-    //vertex.applyMatrix(this.Tviewport);
+    vertex.applyMatrix(this.Tviewport);
     
 
   }

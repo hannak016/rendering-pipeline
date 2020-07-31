@@ -204,21 +204,12 @@ export default class Rasterizer {
   render() {
     // TODO: initialization, and vertex generation, etc.
 
-
-
+    //init
     this.initBuffers()
     this.initTransformation()
 
 
-    //outerloop()
-    //unit:each face
-
-/*     vertex generation
-    --vertex positions
-    --vertex uvs
-    --vertex normals
- */
-
+    //vertex generation
     //test for 1 face 
     for(let fI=0;fI<1;fI++){
 
@@ -260,10 +251,8 @@ export default class Rasterizer {
       finalVNs.push(n4) 
         
       } 
-/*       console.log(finalVs)
-      console.log(finalUVs)
-      console.log(finalVNs) */
 
+      //pass infos for draw()
       this.draw(finalVs,finalUVs,finalVNs)
     
     }
@@ -287,73 +276,21 @@ export default class Rasterizer {
       tri[0].y-tri[1].y,
       tri[0].z-tri[1].z,
       0);
-    
-
     let v12 = new Vector(
       tri[1].x-tri[2].x,
       tri[1].y-tri[2].y,
       tri[1].z-tri[2].z,
       0)
-    //test: pass
-    //safe from sub() side effect
-    {
-/*       console.log(tri[1])
-      
-      let v01 = new Vector(
-      tri[0].x-tri[1].x,
-      tri[0].y-tri[1].y,
-      tri[0].z-tri[1].z,
-      0);
-    
-
-    let v12 = new Vector(
-      tri[1].x-tri[2].x,
-      tri[1].y-tri[2].y,
-      tri[1].z-tri[2].z,
-      0)
-    console.log(tri[1]) */
-  }
 
     v01.normalize();
-    v12.normalize();  
-  //test: pass 
-  {/*
-    console.log(v01)
-    console.log(v12)
+    v12.normalize(); 
 
-    v01.normalize();
-    v12.normalize();
-
-    console.log(v01)
-    console.log(v12)
-   
-  */}
-
-  //normal of this face: calculating here instead of from geometry attribute cuz the parameter passing limit
-
+   //this face normal. move it first without moving the vertices 
     let myfaceN = new Vector();
     myfaceN.crossVectors(v01,v12).normalize();
-  //test:pass
-{
-/*     let myfaceN = new Vector();
-    myfaceN.crossVectors(v01,v12).normalize();
-    console.log(myfaceN);
-    console.log(this.model.geometry.faces[0].normal) */
-}
-
-   // to camera pos without having moved the vertrices yet
     myfaceN.applyMatrix(this.Tmodel);
     myfaceN.applyMatrix(this.Tcamera);
-    //test: pass
-    {
 
-
-           /*  //console.log(myfaceN)
-            myfaceN.applyMatrix(this.Tmodel);
-            //console.log(myfaceN)
-            myfaceN.applyMatrix(this.Tcamera);
-            //console.log(myfaceN); */
-    }
 
   //backface culling 
 
@@ -364,11 +301,11 @@ export default class Rasterizer {
       0
     )
     camDir.normalize();
- //safe
- 
+
     let cosTheta = myfaceN.dot(camDir)
     if(cosTheta>0){
-      //draw 
+    
+      //ok draw 
 
 
       
@@ -377,11 +314,7 @@ export default class Rasterizer {
       this.vertexShader(e);
     })
 
-    //console.log(tri)
-
-
-    //the boundary calculation
-
+    //culling: boundary calculation
     let myBox = {
 
       xmax:Math.max(tri[0].x, tri[2].x, tri[2].x),
@@ -391,10 +324,7 @@ export default class Rasterizer {
       zmax:Math.max(tri[0].z, tri[2].z, tri[2].z),
       zmin:Math.min(tri[0].z, tri[2].z, tri[2].z),
 
-
     }
-
-
 
 
 //test 
@@ -426,61 +356,54 @@ export default class Rasterizer {
           tri[1].z-tri[0].z,
           0
         );
-
-
         const _vp0=new Vector(
           P.x-tri[0].x,
           P.y-tri[0].y,
           P.z-tri[0].z,
           0
         );
-
-
-		const dot00 = _v20.dot( _v20 );
-		const dot01 = _v20.dot( _v10 );
-		const dot02 = _v20.dot( _vp0 );
-		const dot11 = _v10.dot( _v10 );
-		const dot12 = _v10.dot( _vp0 );
-
-		const denom = ( dot00 * dot11 - dot01 * dot01 );
-
-	  if(denom!==0){
+        const dot00 = _v20.dot( _v20 );
+        const dot01 = _v20.dot( _v10 );
+        const dot02 = _v20.dot( _vp0 );
+        const dot11 = _v10.dot( _v10 );
+        const dot12 = _v10.dot( _vp0 );
+        const denom = ( dot00 * dot11 - dot01 * dot01 );
+        
+        
+        if(denom!==0){
 		
-		const u = ( dot11 * dot02 - dot01 * dot12 ) / denom
-    const v = ( dot00 * dot12 - dot01 * dot02 ) / denom
-
-    
-
-    
-    let PBC = new Vector(1 - u - v, v, u, 0);
-
-
-    //skip the pixels outside
-    //Geometry()from three.js are the points counter-clockwise=>the pixel is in the triangle only if u v and 1-u-v are all positive
-  
-    if (PBC.x > 0 && PBC.y > 0 && PBC.z > 0){
- 
-    //console.log(PBC)
-
-    //uv interpolation 
-    PUV.x = uvs[0].x*(1-u-v)+uvs[1].x*v+uvs[2].x*u
-    PUV.y = uvs[0].y*(1-u-v)+uvs[1].y*v+uvs[2].y*u
-    //console.log(PUV)
-
-
-    //normal interpolation 
-    PN.x=normals[0].x*(1-u-v)+normals[1].x*v+normals[2].x*u;
-    PN.y=normals[0].y*(1-u-v)+normals[1].y*v+normals[2].y*u;
-    PN.z=normals[0].z*(1-u-v)+normals[1].z*v+normals[2].z*u;
-    //console.log(PN)
-
-    //pass to fs
-    this.fragmentShader(PUV,PN,P);
-    }
-
-
-
-  }
+          const u = ( dot11 * dot02 - dot01 * dot12 ) / denom
+          const v = ( dot00 * dot12 - dot01 * dot02 ) / denom
+      
+          let PBC = new Vector(1 - u - v, v, u, 0);
+      
+      
+          //skip the pixels outside
+          //Geometry()from three.js are the points counter-clockwise=>the pixel is in the triangle only if u v and 1-u-v are all positive
+        
+          if (PBC.x > 0 && PBC.y > 0 && PBC.z > 0){
+       
+         
+      
+          //uv interpolation 
+          PUV.x = uvs[0].x*(1-u-v)+uvs[1].x*v+uvs[2].x*u
+          PUV.y = uvs[0].y*(1-u-v)+uvs[1].y*v+uvs[2].y*u
+          
+      
+          //normal interpolation 
+          PN.x=normals[0].x*(1-u-v)+normals[1].x*v+normals[2].x*u;
+          PN.y=normals[0].y*(1-u-v)+normals[1].y*v+normals[2].y*u;
+          PN.z=normals[0].z*(1-u-v)+normals[1].z*v+normals[2].z*u;
+       
+      
+          //pass to fs
+          this.fragmentShader(PUV,PN,P);
+          }
+      
+      
+      
+        }
+	  
   }
   }
   }

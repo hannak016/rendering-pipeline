@@ -204,15 +204,19 @@ export default class Rasterizer {
   render() {
     // TODO: initialization, and vertex generation, etc.
 
-    console.log(this.model.texture)
 
     //init
     this.initBuffers()
     this.initTransformation()
 
+    
+
 
     //transform the light here so that it does not go into the loop
+    console.log(this.light.position)
     this.vertexShader(this.light.position);
+    console.log(this.light.position)
+    console.log('lala')
     
   
 
@@ -413,7 +417,7 @@ export default class Rasterizer {
   
       
           //pass to fs
-          //this.fragmentShader(PUV,PN,P);
+          this.fragmentShader(PUV,PN,P);
           }
       
       
@@ -470,8 +474,9 @@ export default class Rasterizer {
       this.model.texture.data[4*indexT+1],
       this.model.texture.data[4*indexT+2]
     ]  
+    console.log('lulu')
 
-    //console.log(myT)
+    //console.log(myTex)
 
     let myLight=new Vector(
       this.light.position.x-x.x,
@@ -514,19 +519,20 @@ export default class Rasterizer {
     H.normalize();
     
 
-    const la = myTex.multiplyScalar(ka)
-    const ld = myTex.multiplyScalar(kd)*Math.max(0.0,normal.dot(myLight))
-    const ls = myTex.multiplyScalar(ks)*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
+    const la = myTex[0]*ka
+    const ld = myTex[1]*kd*Math.max(0.0,normal.dot(myLight))
+    const ls = myTex[2]*ks*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
 
     let outColor = [la,ld,ls]
 
-
+    console.log(outColor)
     //occlusion test
-      if(x.z<this.depthBuf){
+      //if(x.z<this.depthBuf){
       //Buffer update
+      console.log('bbbbbbbbb')
       this.depthBuf[x.x * x.y-1]=x.z;
       //this.frameBuf[x.x*x.y-1]=outColor;
-      this.frameBuf[x.x*x.y-1]=[256, 256, 256];
-    } 
+      this.frameBuf[x.x*x.y-1]=[0, 256, 256];
+    //} 
   }
 }

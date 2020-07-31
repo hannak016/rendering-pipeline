@@ -204,14 +204,19 @@ export default class Rasterizer {
   render() {
     // TODO: initialization, and vertex generation, etc.
 
+    console.log(this.model.texture)
+
     //init
     this.initBuffers()
     this.initTransformation()
+   
+
+    console.log(this.model.texture.data)
 
 
     //vertex generation
     //test for 1 face 
-    for(let fI=0;fI<1;fI++){
+    for(let fI=0;fI<3;fI++){
 
     //for all faces
     //for(let fI=0;fI<this.model.geometry.faces.length;fI++){
@@ -314,6 +319,12 @@ export default class Rasterizer {
       this.vertexShader(e);
     })
 
+    normals.forEach(normal=>{
+
+      normal.applyMatrix(this.Tmodel);
+      }
+    )
+
     //culling: boundary calculation
     let myBox = {
 
@@ -325,17 +336,18 @@ export default class Rasterizer {
       zmin:Math.min(tri[0].z, tri[2].z, tri[2].z),
 
     }
+    
 
 
 //test 
-/*     for(let x=myBox.xmin+100;x<myBox.xmin+200;x++){
-      for(let y=myBox.ymin+100;y<myBox.ymin+200;y++){
-       for(let z=myBox.zmin+100;z<myBox.zmin+200;z++){ */
+    for(let x=myBox.xmin+200;x<myBox.xmin+300;x++){
+      for(let y=myBox.ymin+200;y<myBox.ymin+300;y++){
+       for(let z=myBox.zmin+200;z<myBox.zmin+300;z++){
         
 //loop all
-    for(let x=myBox.xmin;x<myBox.xmax;x++){
+/*     for(let x=myBox.xmin;x<myBox.xmax;x++){
       for(let y=myBox.ymin;y<myBox.ymax;y++){
-       for(let z=myBox.zmin;z<myBox.zmax;z++){
+       for(let z=myBox.zmin;z<myBox.zmax;z++){ */
 
         let P = new Vector(x,y,z,0);
         let PN = new Vector();
@@ -394,7 +406,7 @@ export default class Rasterizer {
           PN.x=normals[0].x*(1-u-v)+normals[1].x*v+normals[2].x*u;
           PN.y=normals[0].y*(1-u-v)+normals[1].y*v+normals[2].y*u;
           PN.z=normals[0].z*(1-u-v)+normals[1].z*v+normals[2].z*u;
-       
+  
       
           //pass to fs
           this.fragmentShader(PUV,PN,P);
@@ -418,31 +430,10 @@ export default class Rasterizer {
    */
   vertexShader(vertex) {
     // TODO: transforms vertex from model space to projection space
-
-    
-/* 
-    console.log('original')
-    console.log(vertex) */
-
     vertex.applyMatrix(this.Tmodel);
-/*     console.log('to 000')
-    console.log(vertex) */
-
     vertex.applyMatrix(this.Tcamera);
-/*     console.log('to cam')
-    console.log(vertex) */
-
     vertex.applyMatrix(this.Tpersp);
- /*    console.log('projected')
-    console.log(vertex) */
-
-    vertex.applyMatrix(this.Tviewport)
-
-   /*    console.log('on screen')
-    console.log(vertex) */
-    
-   
-    
+    vertex.applyMatrix(this.Tviewport);
 
   }
   /**
@@ -457,19 +448,28 @@ export default class Rasterizer {
   fragmentShader(uv, normal, x) {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
 
-    //the texture of the n's pixel
 
+    //query the color
+    let myTU;
+    let myTV;
+    let myT = new Array();
+    let indexT;
 
-/*     for(let n=0;n<this.model.texture.data.length/4;n++){
-      let I =[
-        this.model.texture.data[4*n],
-        this.model.texture.data[4*n+1],
-        this.model.texture.data[4*n+2]
-      ]    
-  }
-  
+    myTU = Math.trunc(uv.x*this.model.texture.width);
+    myTV = Math.trunc(uv.y*this.model.texture.height);
+    indexT = myTU*myTV-1;
+    
+    
+    //myT texture(rgb value) at this pixel x
+    myT=[
+      this.model.texture.data[4*indexT],
+      this.model.texture.data[4*indexT+1],
+      this.model.texture.data[4*indexT+2]
+    ]  
 
+    console.log(myT)
 
+/*     
 
     const ka = this.light.Kamb;
     const kd = this.light.Kdiff;
@@ -504,12 +504,12 @@ export default class Rasterizer {
     //depthBuf
     //frameBuf
 
-    if(x.z<this.depthBuf){
+/*      if(x.z<this.depthBuf){
       this.depthBuf[x.x*x.y-1]=x.z;
       //this.frameBuf[x.x*x.y-1]=outColor;
       this.frameBuf[x.x*x.y-1]=[256, 256, 256];
     }
-    else{}
+     */ 
 
  
   }

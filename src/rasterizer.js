@@ -103,6 +103,7 @@ export default class Rasterizer {
 
     //Tmodel
     const myTmodel = new Matrix();
+
     myTmodel.set( 
       this.model.scale.x,0,0,-this.model.position.x,
       0,this.model.scale.y,0,-this.model.position.y,
@@ -110,12 +111,13 @@ export default class Rasterizer {
       0,0,0,1
     )
 
+  
     this.Tmodel = myTmodel;
-    // => model at (0,0,0)
+    
 
     //Tcamera
     const myTcamera = new Matrix();
-    let myZ = new Vector(
+    const myZ = new Vector(
       this.camera.position.x-this.camera.lookAt.x,
       this.camera.position.y-this.camera.lookAt.y,
       this.camera.position.z-this.camera.lookAt.z,
@@ -136,13 +138,8 @@ export default class Rasterizer {
       0,0,0,1 
     )
 
-    
     this.Tcamera = myTcamera;
-    //=> model's position is relative to the camera
-
-
-
-
+    
 
     //Tpersp
     const aspect = this.camera.aspect;
@@ -175,10 +172,6 @@ export default class Rasterizer {
 
 
     this.Tpersp = myTpersp;
-    //=> model is in 2D
- 
-
-
 
 
     //Tviewport
@@ -192,8 +185,16 @@ export default class Rasterizer {
 
     
     this.Tviewport = myTviewport;
-    // => model on screen
 
+
+    //TinverseMV
+
+    const myTMC = new Matrix();
+    myTMC.multiplyMatrices(myTcamera,myTmodel);
+    let TrInvMC = new Matrix();
+    TrInvMC=myTMC.inverse();
+    TrInvMC.transpose();
+    this.TrInvMC = TrInvMC;
 
   }
 
@@ -204,35 +205,29 @@ export default class Rasterizer {
   render() {
     // TODO: initialization, and vertex generation, etc.
 
-    console.log(this.model.texture)
 
     //init
     this.initBuffers()
     this.initTransformation()
+
+
+    //transform the light here so that it does not go into the loop
+    this.vertexShader(this.light.position);
    
-
-    console.log(this.model.texture.data)
-
-
-    //vertex generation
-    //test for 1 face 
-    for(let fI=0;fI<3;fI++){
-
-    //for all faces
-    //for(let fI=0;fI<this.model.geometry.faces.length;fI++){
+  
+for(let fI=0;fI<this.model.geometry.faces.length;fI++){
 
       let finalVs = [];
       let finalUVs = [];
       let finalVNs = [];
         
         
-      //vertice in face fI 
+      //vertice coordinates
       let vListfIv3 =
       [   this.model.geometry.vertices[this.model.geometry.faces[fI].a],
           this.model.geometry.vertices[this.model.geometry.faces[fI].b],
           this.model.geometry.vertices[this.model.geometry.faces[fI].c]
       ]
-      //vertice in face fI (vec4)
       vListfIv3.forEach(e=>{
         let vIn4 = new Vector(e.x,e.y,e.z,1);
         finalVs.push(vIn4);
@@ -254,6 +249,8 @@ export default class Rasterizer {
         0
       )
       finalVNs.push(n4) 
+
+  
         
       } 
 
@@ -272,60 +269,21 @@ export default class Rasterizer {
    * @param {Array.<Vector>} normals is an Array of Vector normals
    */
   draw(tri, uvs, normals) {
-    // TODO: implement a rendering pipeline.
+    // TODO: implement a rendering pipeline.  
 
-    //backface culling
-
-    let v01 = new Vector(
-      tri[0].x-tri[1].x,
-      tri[0].y-tri[1].y,
-      tri[0].z-tri[1].z,
-      0);
-    let v12 = new Vector(
-      tri[1].x-tri[2].x,
-      tri[1].y-tri[2].y,
-      tri[1].z-tri[2].z,
-      0)
-
-    v01.normalize();
-    v12.normalize(); 
-
-   //this face normal. move it first without moving the vertices 
-    let myfaceN = new Vector();
-    myfaceN.crossVectors(v01,v12).normalize();
-    myfaceN.applyMatrix(this.Tmodel);
-    myfaceN.applyMatrix(this.Tcamera);
-
-
-  //backface culling 
-
-    const  camDir = new Vector(
-      this.camera.position.x-this.camera.lookAt.x,
-      this.camera.position.y-this.camera.lookAt.y,
-      this.camera.position.z-this.camera.lookAt.z,
-      0
-    )
-    camDir.normalize();
-
-    let cosTheta = myfaceN.dot(camDir)
-    if(cosTheta>0){
-    
-      //ok draw 
-
-
-      
+  
     //transform the vertices on screen  
     tri.forEach(e=>{
       this.vertexShader(e);
     })
+    
 
     normals.forEach(normal=>{
-
-      normal.applyMatrix(this.Tmodel);
+      normal.applyMatrix(this.TrInvMC);
       }
     )
 
-    //culling: boundary calculation
+    //culling: barycnetrical calculation with bounding box (instead of old school method sweeping line)
     let myBox = {
 
       xmax:Math.max(tri[0].x, tri[2].x, tri[2].x),
@@ -339,15 +297,10 @@ export default class Rasterizer {
     
 
 
-//test 
-    for(let x=myBox.xmin+200;x<myBox.xmin+300;x++){
-      for(let y=myBox.ymin+200;y<myBox.ymin+300;y++){
-       for(let z=myBox.zmin+200;z<myBox.zmin+300;z++){
-        
-//loop all
-/*     for(let x=myBox.xmin;x<myBox.xmax;x++){
+   for(let x=myBox.xmin;x<myBox.xmax;x++){
       for(let y=myBox.ymin;y<myBox.ymax;y++){
-       for(let z=myBox.zmin;z<myBox.zmax;z++){ */
+       for(let z=myBox.zmin;z<myBox.zmax;z++){ 
+
 
         let P = new Vector(x,y,z,0);
         let PN = new Vector();
@@ -390,13 +343,9 @@ export default class Rasterizer {
           let PBC = new Vector(1 - u - v, v, u, 0);
       
       
-          //skip the pixels outside
-          //Geometry()from three.js are the points counter-clockwise=>the pixel is in the triangle only if u v and 1-u-v are all positive
-        
+          //skip the pixels outside 
           if (PBC.x > 0 && PBC.y > 0 && PBC.z > 0){
        
-         
-      
           //uv interpolation 
           PUV.x = uvs[0].x*(1-u-v)+uvs[1].x*v+uvs[2].x*u
           PUV.y = uvs[0].y*(1-u-v)+uvs[1].y*v+uvs[2].y*u
@@ -406,21 +355,20 @@ export default class Rasterizer {
           PN.x=normals[0].x*(1-u-v)+normals[1].x*v+normals[2].x*u;
           PN.y=normals[0].y*(1-u-v)+normals[1].y*v+normals[2].y*u;
           PN.z=normals[0].z*(1-u-v)+normals[1].z*v+normals[2].z*u;
+          PN.normalize();
   
       
           //pass to fs
           this.fragmentShader(PUV,PN,P);
-          }
-      
-      
-      
+
+          }  
         }
 	  
   }
   }
   }
 
-  }
+  
   }
   /**
    * vertexShader is a shader that consumes a vertex then returns a vertex.
@@ -433,7 +381,7 @@ export default class Rasterizer {
     vertex.applyMatrix(this.Tmodel);
     vertex.applyMatrix(this.Tcamera);
     vertex.applyMatrix(this.Tpersp);
-    vertex.applyMatrix(this.Tviewport);
+    vertex.applyMatrix(this.Tviewport)
 
   }
   /**
@@ -449,68 +397,69 @@ export default class Rasterizer {
     // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
 
 
+    //light direction caculation in fs not in vs due to the assignments's parameter passing constraint
+    let myLight=new Vector(
+      this.light.position.x-x.x,
+      this.light.position.y-x.y,
+      this.light.position.z-x.z,
+      0
+    );
+    myLight.normalize();
+    
+
+
     //query the color
     let myTU;
     let myTV;
-    let myT = new Array();
+    let myCol = new Array();
     let indexT;
-
+    //drop the fraction
     myTU = Math.trunc(uv.x*this.model.texture.width);
     myTV = Math.trunc(uv.y*this.model.texture.height);
-    indexT = myTU*myTV-1;
-    
-    
-    //myT texture(rgb value) at this pixel x
-    myT=[
+    indexT = myTU*myTV-1; 
+    //my texture(rgb value) at this pixel x
+    myCol = [
       this.model.texture.data[4*indexT],
       this.model.texture.data[4*indexT+1],
       this.model.texture.data[4*indexT+2]
     ]  
-
-    console.log(myT)
-
-/*     
+  
 
     const ka = this.light.Kamb;
-    const kd = this.light.Kdiff;
-    const ks = this.light.Kspec;
+    const kd = this.light.Kdiff;//light myLight
+    const ks = this.light.Kspec;//light and view H
 
-    const V =new Vector(this.camera.position-x);
+    const V =new Vector(
+      this.camera.position.x-x.x,
+      this.camera.position.y-x.y,
+      this.camera.position.z-x.z,
+      0);
     V.normalize();
-    const LPos3 = [this.light.position.x,this.light.position.y,this.light.position.z]
-
-
-    const L= new Vector(this.vertexShader(LPos3),1);
-    L=L.sub(x);
-    L.normalize();
-
-
-    const H = L.add(V);
+    const H = new Vector(
+      myLight.x+V.x,
+      myLight.y+V.y,
+      myLight.z+V.z,
+      0)
     H.normalize();
-    //?const I=new Vector(uv,x)
-
-
     
 
-    const la = new Vector(ka,ka,ka,1)*I
-    const ld = new Vector(kd,kd,kd,1)*I*Math.max(0.0,normal.dot(L))
-    const ls = new Vector(ks,ks,ks,1)*I*Math.pow(Math.max(normal.dot(H),0.0),10)
-
-    let outColor = la.add(ld).add(ls); */
-
-
-
-
-    //depthBuf
-    //frameBuf
-
-/*      if(x.z<this.depthBuf){
-      this.depthBuf[x.x*x.y-1]=x.z;
-      //this.frameBuf[x.x*x.y-1]=outColor;
-      this.frameBuf[x.x*x.y-1]=[256, 256, 256];
+    const la = ka
+    const ld = kd*Math.max(0.0,normal.dot(myLight))
+    const ls = ks*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
+      
+    
+    //for r g b seperately
+    myCol.forEach(c=>{
+      c*la+c*ld+c*ls
     }
-     */ 
+    )
 
- 
+    //occlusion test
+      if(x.z<this.depthBuf){
+      //Buffer update
+      this.depthBuf[x.x * x.y-1]=x.z;
+      this.frameBuf[x.x*x.y-1]=myCol;
+      
+    } 
   }
 }

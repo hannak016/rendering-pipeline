@@ -209,10 +209,12 @@ export default class Rasterizer {
     //init
     this.initBuffers()
     this.initTransformation()
-   
 
-    console.log(this.model.texture.data)
 
+    //transform the light here so that it does not go into the loop
+    this.vertexShader(this.light.position);
+    
+  
 
     //vertex generation
     //test for 1 face 
@@ -349,6 +351,8 @@ export default class Rasterizer {
       for(let y=myBox.ymin;y<myBox.ymax;y++){
        for(let z=myBox.zmin;z<myBox.zmax;z++){ */
 
+        //Pixel in box, which is defined from transformed vertices, therefore pixel position interpolation is not needed
+
         let P = new Vector(x,y,z,0);
         let PN = new Vector();
         let PUV = {x:null,y:null}
@@ -409,7 +413,7 @@ export default class Rasterizer {
   
       
           //pass to fs
-          this.fragmentShader(PUV,PN,P);
+          //this.fragmentShader(PUV,PN,P);
           }
       
       
@@ -452,7 +456,7 @@ export default class Rasterizer {
     //query the color
     let myTU;
     let myTV;
-    let myT = new Array();
+    let myTex = new Array();
     let indexT;
 
     myTU = Math.trunc(uv.x*this.model.texture.width);
@@ -461,56 +465,68 @@ export default class Rasterizer {
     
     
     //myT texture(rgb value) at this pixel x
-    myT=[
+    myTex = [
       this.model.texture.data[4*indexT],
       this.model.texture.data[4*indexT+1],
       this.model.texture.data[4*indexT+2]
     ]  
 
-    console.log(myT)
+    //console.log(myT)
 
-/*     
+    let myLight=new Vector(
+      this.light.position.x-x.x,
+      this.light.position.y-x.y,
+      this.light.position.z-x.z,
+      0
+/*    x.x-this.light.position.x,
+      x.y-this.light.position.y,
+      x.z-this.light.position.z,
+      0 */
+    );
+    myLight.normalize();
+
+    // Intensity:myT
+    // shading point:x
+    // light direction:myLight
+    // normal:normal
+    // grad: default 10? shiness?
+    //params from this.light
+
 
     const ka = this.light.Kamb;
     const kd = this.light.Kdiff;
     const ks = this.light.Kspec;
 
-    const V =new Vector(this.camera.position-x);
+    const V =new Vector(
+      this.camera.position.x-x.x,
+      this.camera.position.y-x.y,
+      this.camera.position.z-x.z,
+      0);
     V.normalize();
-    const LPos3 = [this.light.position.x,this.light.position.y,this.light.position.z]
 
+  
 
-    const L= new Vector(this.vertexShader(LPos3),1);
-    L=L.sub(x);
-    L.normalize();
-
-
-    const H = L.add(V);
+    const H = new Vector(
+      myLight.x+V.x,
+      myLight.y+V.y,
+      myLight.z+V.z,
+      0)
     H.normalize();
-    //?const I=new Vector(uv,x)
-
-
     
 
-    const la = new Vector(ka,ka,ka,1)*I
-    const ld = new Vector(kd,kd,kd,1)*I*Math.max(0.0,normal.dot(L))
-    const ls = new Vector(ks,ks,ks,1)*I*Math.pow(Math.max(normal.dot(H),0.0),10)
+    const la = myTex.multiplyScalar(ka)
+    const ld = myTex.multiplyScalar(kd)*Math.max(0.0,normal.dot(myLight))
+    const ls = myTex.multiplyScalar(ks)*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
 
-    let outColor = la.add(ld).add(ls); */
-
-
+    let outColor = [la,ld,ls]
 
 
-    //depthBuf
-    //frameBuf
-
-/*      if(x.z<this.depthBuf){
-      this.depthBuf[x.x*x.y-1]=x.z;
+    //occlusion test
+      if(x.z<this.depthBuf){
+      //Buffer update
+      this.depthBuf[x.x * x.y-1]=x.z;
       //this.frameBuf[x.x*x.y-1]=outColor;
       this.frameBuf[x.x*x.y-1]=[256, 256, 256];
-    }
-     */ 
-
- 
+    } 
   }
 }

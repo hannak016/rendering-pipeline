@@ -1,14 +1,32 @@
-import { 
+/**
+ * CG1 Online-Hausarbeit 3: Implementing a Rasterization Pipeline
+ * Copyright (C) 2020 Changkun Ou <https://changkun.de/>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import {
   Vector3, Scene, WebGLRenderer, PerspectiveCamera, CameraHelper,
   Geometry, PlaneBufferGeometry, BufferAttribute, OrthographicCamera,
   Mesh, MeshBasicMaterial, MeshPhongMaterial, TextureLoader, DoubleSide,
   PointLight, PointLightHelper, AmbientLight, AxesHelper, BufferGeometry,
-  Color, Float32BufferAttribute,LineBasicMaterial, LineSegments,
+  Color, Float32BufferAttribute, LineBasicMaterial, LineSegments,
 } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
-import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils'
-import { GUI } from 'dat.gui'
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
+import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
+import {BufferGeometryUtils} from 'three/examples/jsm/utils/BufferGeometryUtils'
+import {GUI} from 'dat.gui'
 import Stats from 'stats.js'
 import Rasterizer from './rasterizer'
 
@@ -16,6 +34,10 @@ import Rasterizer from './rasterizer'
  * Renderer is a three.js based rendering engine.
  */
 class Renderer {
+  /**
+   * constroctor implements a three.js renderer that initializes the renderer,
+   * the scene graph, dat gui, and tw cameras
+   */
   constructor() {
     // renderer
     const container = document.body
@@ -25,14 +47,14 @@ class Renderer {
     this.renderer = new WebGLRenderer({
       canvas: canvas,
       context: canvas.getContext('webgl2'),
-      antialias: true
+      antialias: true,
     })
     container.appendChild(this.renderer.domElement)
 
     // scene graph
     this.scene = new Scene()
 
-    this.panel = { onlyScreen: true }
+    this.panel = {onlyScreen: true}
     this.gui = new GUI()
     this.gui.add(this.panel, 'onlyScreen').listen()
 
@@ -61,7 +83,7 @@ class Renderer {
     }
     this.screenEye = new OrthographicCamera(
       -window.innerWidth/2,
-      window.innerWidth/2, 
+      window.innerWidth/2,
       window.innerHeight/2,
       -window.innerHeight/2
     )
@@ -70,10 +92,8 @@ class Renderer {
 
     window.addEventListener('resize', () => {
       if (this.panel.onlyScreen) {
-        const newFrustum = window.innerWidth
-        const newAspect = window.innerWidth / window.innerHeight
         this.screenEye.left = -window.innerWidth/2
-        this.screenEye.right = window.innerWidth/2, 
+        this.screenEye.right = window.innerWidth/2,
         this.screenEye.top = window.innerHeight/2,
         this.screenEye.bottom = -window.innerHeight/2
         this.screenEye.updateProjectionMatrix()
@@ -95,9 +115,16 @@ class Renderer {
     this.stats.showPanel(0)
     container.appendChild(this.stats.domElement)
   }
+  /**
+   * update is empty by design, this method should be implemented in a
+   * sub class.
+   */
   update() {
     // This method can be implemented in a subclass for animation.
   }
+  /**
+   * render is the render loop of this renderer.
+   */
   render() {
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.stats.update()
@@ -112,7 +139,14 @@ class Renderer {
   }
 }
 
+/**
+ * Monitor mocks a display hardware that renders its frame buffer to the
+ * world.
+ */
 class Monitor extends Renderer {
+  /**
+   * constructor initializes the whole display
+   */
   constructor() {
     super()
 
@@ -144,8 +178,8 @@ class Monitor extends Renderer {
           shininess: 150,
         },
         scale: new Vector3(1500, 1500, 1500),
-        position: new Vector3(-700, -5, 350)
-      }
+        position: new Vector3(-700, -5, 350),
+      },
     }
 
     // Create a camera and a camera helper to visualize the viewfrustum.
@@ -165,21 +199,24 @@ class Monitor extends Renderer {
     this.setup()
   }
   /**
-   * update camera lookAt position to makesure the camera helper is 
+   * update camera lookAt position to makesure the camera helper is
    * visualized correctly.
-   * 
+   *
    * This function is called in the render method of the Renderer class.
    */
   update() {
     this.camera.lookAt(this.params.camera.lookAt)
   }
+  /**
+   * loadAssets loads the needed assets, including the bunny and its texture.
+   */
   async loadAssets() {
     // Load model assets
-    const load = (loader, url) => {
-      return new Promise(resolve => new loader().load(url, resolve))
+    const load = (Loader, url) => {
+      return new Promise((resolve) => new Loader().load(url, resolve))
     }
     const g = await load(OBJLoader, this.params.model.geometry)
-    const t =  await load(TextureLoader, this.params.model.texture.data)
+    const t = await load(TextureLoader, this.params.model.texture.data)
 
     // Read texture color as an array for texture queries,
     // see src/rasterizer.js.
@@ -187,15 +224,15 @@ class Monitor extends Renderer {
     canvas.width = t.image.width
     canvas.height = t.image.height
     canvas.getContext('2d').drawImage(
-     t.image, 0, 0, canvas.width, canvas.height
+      t.image, 0, 0, canvas.width, canvas.height
     )
-    this.params.model.geometry = 
+    this.params.model.geometry =
       new Geometry().fromBufferGeometry(g.children[0].geometry)
     this.params.model.texture = {
       data: canvas.getContext('2d')
-      .getImageData(0, 0, canvas.width, canvas.height).data,
+        .getImageData(0, 0, canvas.width, canvas.height).data,
       width: canvas.width, height: canvas.height,
-      shininess: this.params.model.texture.shininess
+      shininess: this.params.model.texture.shininess,
     }
 
     // Create the bunny
@@ -237,7 +274,6 @@ class Monitor extends Renderer {
     const t0 = performance.now()
     r.render()
     const t1 = performance.now()
-    
 
     this.flushFrameBuffer(r)
     console.log(`CPU rasterizer perf: ${1000/(t1-t0)} fps`)
@@ -245,10 +281,12 @@ class Monitor extends Renderer {
   /**
    * initScreen creates a plane to simulate a pixel based screen.
    * It works with the `flushFrameBuffer` in a Rasterizer.
+   * @param {number} width is the width of the monitor
+   * @param {number} height is the height of the monitor
    */
   initScreen(width, height) {
     const color = new Color(0x444444)
-    const vs = [], cs = []
+    const vs = []; const cs = []
     for (let i = 0, j = 0, k = 0; i<=height; i++, k += 1) {
       vs.push(0, k, 0, width, k, 0)
       color.toArray(cs, j); j += 3
@@ -275,10 +313,10 @@ class Monitor extends Renderer {
   /**
    * flushFrameBuffer flushes the stored colors in `r.frameBuf` to
    * the created screen in `this.initScreen`.
-   * 
+   *
    * This function contains performance optimization for rendering
    * massive number of objects.
-   * 
+   *
    * You don't need read how it works, and do NOT touch anything from here.
    * @param {Rasterizer} r is a rasterizer
    */
@@ -286,15 +324,17 @@ class Monitor extends Renderer {
     // early error checking
     const nPixels = this.params.screen.height*this.params.screen.width
     if (r.frameBuf.length !== nPixels) {
-      throw `flushFrameBuffer: incorrect size of frame buffer, expect: ${nPixels}, got: ${r.frameBuf.length}.`
+      throw new Error('flushFrameBuffer: incorrect size of frame buffer,'+
+      ` expect: ${nPixels}, got: ${r.frameBuf.length}.`)
     }
     r.frameBuf.forEach((v, idx) => {
       if (Array.isArray(v) && v.length === 3 && !v.some(isNaN)) return
-      throw `flushFrameBuffer: incorrect color value stored in frame buffer, index: ${idx}, value: ${v}`
+      throw new Error('flushFrameBuffer: incorrect color value stored in frame'+
+      ` buffer, index: ${idx}, value: ${v}`)
     })
 
     // render
-    let geometries = []
+    const geometries = []
     for (let i = 0; i < this.params.screen.width; i++) {
       for (let j = 0; j < this.params.screen.height; j++) {
         const g = new PlaneBufferGeometry(1, 1, 1, 1)

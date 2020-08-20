@@ -1,20 +1,3 @@
-/**
- * CG1 Online-Hausarbeit 3: Implementing a Rasterization Pipeline
- * Copyright (C) 2020 Changkun Ou <https://changkun.de/>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 
 
 
@@ -25,12 +8,7 @@ import Matrix from './mat'
  * Rasterizer implements a CPU rasterization rendering pipeline.
  */
 export default class Rasterizer {
-  /**
-   * constructor creates all properties of a Rasterizer.
-   *
-   * @param {Object} params contains an object with the scene parameters.
-   * @return {Rasterizer} this
-   */
+  
   constructor(params) {
     this.screen = params.screen
     this.camera = {
@@ -60,8 +38,7 @@ export default class Rasterizer {
       position: new Vector(-700, -5, 350, 1),
     }
 
-    // Buffers that is used in the rasterizer.
-    //
+  
    
     this.frameBuf = new Array(this.screen.width * this.screen.height)
     this.depthBuf = new Array(this.screen.width * this.screen.height)
@@ -74,10 +51,10 @@ export default class Rasterizer {
   }
  
   initBuffers() {
-    // buffer initialization
+   
     for (let i = 0; i < this.screen.width*this.screen.height; i++) {
-      this.frameBuf[i] = [0 /* r */, 0 /* g */, /* b */ 0]
-      this.depthBuf[i] = -Infinity
+      this.frameBuf[i] = [0 , 0 , 0]
+      this.depthBuf[i] = - 1
     }
   }
 
@@ -202,23 +179,16 @@ export default class Rasterizer {
  
   draw(tri, uvs, normals) {
   
-    // return:  new allocated vertex
-    // camera space vertex coordinates.
+    // new allocated vertex
+  
     const t = new Array(tri.length)
     tri.forEach((v, idx) => {
       t[idx] = this.vertexShader(v)
     })
 
-    // backface culling
-    const fN = new Vector().crossVectors(
-      new Vector().add(t[1]).sub(t[0]),
-      new Vector().add(t[2]).sub(t[0])
-    ) // no need to normalize and save some calculation
-    if (new Vector(0, 0, -1, 0).dot(fN) >= 0) {
-      return
-    }
+   
 
-    // view frustum culling: compute AABB based on the processed vertices
+    // view frustum culling:  AABB 
     const xMax = Math.min(Math.max(t[0].x, t[1].x, t[2].x), this.screen.width)
     const xMin = Math.max(Math.min(t[0].x, t[1].x, t[2].x), 0)
     const yMax = Math.min(Math.max(t[0].y, t[1].y, t[2].y), this.screen.height)
@@ -297,24 +267,16 @@ export default class Rasterizer {
         const nz = w.x*normals[0].z + w.y*normals[1].z + w.z*normals[2].z
         const normal = new Vector(nx, ny, nz, 0).normalize()
 
-        // Update depth buffer and invoke fragment shader for
-        // shading then update frame buffer using the processed color
+        // Update buffer 
         this.depthBuf[j*this.screen.width + i] = z
         this.frameBuf[j*this.screen.width + i] =
           this.fragmentShader(uv, normal, p)
-          // [255, 255, 255]  // white bunny
-          // [z, z, z]        // grascale bunny
       }
     }
   }
-  /**
-   * vertexShader is a shader that consumes a vertex then returns a vertex.
-   *
-   * @param {Vector} vertex is an input vertex to the vertexShader
-   * @return {Vector} a transformed new vertex
-   */
+  
   vertexShader(vertex) {
-    //transforms vertex from model space to projection space
+    //model space => projection space
     const p = new Vector(vertex.x, vertex.y, vertex.z, 1)
     p.applyMatrix(this.Tmodel)
     p.applyMatrix(this.Tcamera)
@@ -326,49 +288,63 @@ export default class Rasterizer {
     p.w = 1
     return p
   }
-  /**
-   * fragmentShader is a shader that implements texture mapping and
-   * the Blinn-Phong reflectance model.
-   * @param {Vector} uv the UV values of this fragment
-   * @param {Vector} normal the surface normal of this fragment
-   * @param {Vector} x is the coordinates of the shading point
-   * @return {Array.<number>} an array of three numbers that represents
-   * rgb color, e.g. [128, 128, 128] as gray color.
-   */
-  fragmentShader(uv, normal, x) {
-    // texture mapping and Blinn-Phong model in Phong shading frequency
+fragmentShader(uv, normal, x) {
+   
+    let myCol = new Array();
+    
 
-    // fetch color from texture
     const width = this.model.texture.width
     const height = this.model.texture.height
-    const idx = width * (height - Math.floor(uv.y * height)) +
+    const indexT = width * (height - Math.floor(uv.y * height)) +
                 Math.floor(uv.x * width)
-    const I = new Vector(
-      this.model.texture.data[4*idx+0],
-      this.model.texture.data[4*idx+1],
-      this.model.texture.data[4*idx+2],
-      this.model.texture.data[4*idx+3],
-    )
+    myCol = [
+      this.model.texture.data[4*indexT],
+      this.model.texture.data[4*indexT+1],
+      this.model.texture.data[4*indexT+2]
+    ]  
+  
+  
 
-    // compute the blinn-phong
-    const L = new Vector().add(this.light.position).sub(x).normalize()
-    const V = new Vector().add(this.camera.position).sub(x).normalize()
-    const H = new Vector().add(L).add(V).normalize()
-    const clamp = (v) => {
-      v.x = Math.min(Math.max(v.x, 0), 255)
-      v.y = Math.min(Math.max(v.y, 0), 255)
-      v.z = Math.min(Math.max(v.z, 0), 255)
-      return v
-    }
-    const p = this.model.texture.shininess
-    const La = clamp(new Vector().add(I).multiplyScalar(this.light.Kamb))
-    const Ld = clamp(new Vector().add(I).multiplyScalar(this.light.Kdiff)
-      .multiplyScalar(normal.dot(L)))
-    const Ls = clamp(new Vector().add(I).multiplyScalar(this.light.Kspec)
-      .multiplyScalar(Math.pow(normal.dot(H), p)))
+    const ka = this.light.Kamb;
+    const kd = this.light.Kdiff;//light myLight
+    const ks = this.light.Kspec;//light and view H
 
-    const color = clamp(new Vector().add(La).add(Ld).add(Ls))
-    return [color.x, color.y, color.z]
-    // return [I.x, I.y, I.z] // no blinn-phong
+    let myLight=new Vector(
+      this.light.position.x-x.x,
+      this.light.position.y-x.y,
+      this.light.position.z-x.z,
+      0
+    );
+    myLight.normalize();
+
+    const V =new Vector(
+      this.camera.position.x-x.x,
+      this.camera.position.y-x.y,
+      this.camera.position.z-x.z,
+      0);
+    V.normalize();
+    const H = new Vector(
+      myLight.x+V.x,
+      myLight.y+V.y,
+      myLight.z+V.z,
+      0)
+    H.normalize();
+    
+
+    const la = ka
+    const ld = kd*Math.max(0.0,normal.dot(myLight))
+    const ls = ks*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
+
+ 
+      
+   
+    
+    let result=new Array();
+    for(let i=0;i<3;i++){
+      result.push(Math.min(Math.max(myCol[i]*(la+ld+ls), 0), 255))
+
+    } 
+    return result;
   }
+ 
 }

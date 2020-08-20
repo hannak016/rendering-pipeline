@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Note: you are not allowed to import any other APIs, you must only use
-// the Vector and Matrix class.
+
 
 import Vector from './vec'
 import Matrix from './mat'
@@ -49,14 +48,11 @@ export default class Rasterizer {
       position: new Vector(-200, 250, 600, 1),
     }
     this.model = {
-      // Hint: geometry is a three.js Geometry object.
-      // You can check the document for the needed properties here:
-      // https://threejs.org/docs/#api/en/core/Geometry
+      
       geometry: params.model.geometry,
-      // Hint: The texture color is an array of numbers that aligned as
+      //  The texture color is an array of numbers that aligned as
       // [r, g, b, a, r, g, b, a, ...] with size (width x height x 4).
-      // r, g, b, a represents red, green, blue and alpha channel values.
-      // You only need r, g, b values in this assignment.
+      //only need r, g, b values here
       texture: {
         data: params.model.texture.data,
         width: params.model.texture.width,
@@ -96,7 +92,7 @@ export default class Rasterizer {
    * initBuffers initializes this.frameBuf and this.depthBuf.
    */
   initBuffers() {
-    // TODO: buffer initialization
+    // buffer initialization
     for (let i = 0; i < this.screen.width*this.screen.height; i++) {
       this.frameBuf[i] = [0 /* r */, 0 /* g */, /* b */ 0]
       this.depthBuf[i] = -Infinity
@@ -107,7 +103,7 @@ export default class Rasterizer {
    * including this.Tmodel, this.Tcamera, this.Tpersp, and this.Tviewport
    */
   initTransformation() {
-    // TODO: prepare transformation matrices
+    // prepare transformation matrices
     const Tscale = new Matrix()
     Tscale.set(
       this.model.scale.x, 0, 0, 0,
@@ -169,9 +165,9 @@ export default class Rasterizer {
       0, 0, 0, 1
     )
 
-    // Normal matrix is calculated here for performance optimization.
-    // Note that normal matrix can also be ((Tcamera * Tmodel)^(-1))^T
-    // Here we use ((Tmodel)^(-1))^T to save some computation of camera
+    
+    //can also be ((Tcamera * Tmodel)^(-1))^T
+    // Here: ((Tmodel)^(-1))^T to save some computation of camera
     // transforamtion in the shading process.
     this.normalMatrix = new Matrix()
       .multiplyMatrices(new Matrix(), this.Tmodel).extraOp1().extraOp2()
@@ -182,9 +178,10 @@ export default class Rasterizer {
    * Evetually, this methods stored all computed color in the frame buffer.
    */
   render() {
-    // TODO: initialization, and vertex generation, etc.
+    // initialization
     this.initBuffers()
     this.initTransformation()
+    //get infos
     const g = this.model.geometry
     for (let i = 0; i < g.faces.length; i++) {
       const f = g.faces[i]
@@ -228,15 +225,14 @@ export default class Rasterizer {
   draw(tri, uvs, normals) {
     // TODO: implement a rendering pipeline.
 
-    // vertex processing: the vertex shader must return a new allocated vertex
-    // processing the original triangle is wrong becuase normal interpolation
-    // needs the camera space vertex coordinates.
+    // return:  new allocated vertex
+    // camera space vertex coordinates.
     const t = new Array(tri.length)
     tri.forEach((v, idx) => {
       t[idx] = this.vertexShader(v)
     })
 
-    // backface culling: no points if one implemented, this is an optimization
+    // backface culling
     const fN = new Vector().crossVectors(
       new Vector().add(t[1]).sub(t[0]),
       new Vector().add(t[2]).sub(t[0])
@@ -246,8 +242,6 @@ export default class Rasterizer {
     }
 
     // view frustum culling: compute AABB based on the processed vertices
-    // the view frustum culling is the only culling approach can get points
-    // because part of the bunny is outside the viewfrustum.
     const xMax = Math.min(Math.max(t[0].x, t[1].x, t[2].x), this.screen.width)
     const xMin = Math.max(Math.min(t[0].x, t[1].x, t[2].x), 0)
     const yMax = Math.min(Math.max(t[0].y, t[1].y, t[2].y), this.screen.height)
@@ -343,7 +337,7 @@ export default class Rasterizer {
    * @return {Vector} a transformed new vertex
    */
   vertexShader(vertex) {
-    // TODO: transforms vertex from model space to projection space
+    //transforms vertex from model space to projection space
     const p = new Vector(vertex.x, vertex.y, vertex.z, 1)
     p.applyMatrix(this.Tmodel)
     p.applyMatrix(this.Tcamera)
@@ -365,7 +359,7 @@ export default class Rasterizer {
    * rgb color, e.g. [128, 128, 128] as gray color.
    */
   fragmentShader(uv, normal, x) {
-    // TODO: texture mapping and Blinn-Phong model in Phong shading frequency
+    // texture mapping and Blinn-Phong model in Phong shading frequency
 
     // fetch color from texture
     const width = this.model.texture.width

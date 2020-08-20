@@ -1,2 +1,3 @@
-# rasterization-pipeline
-3D modeling without API
+# rendering-pipeline
+## rasterization
+### 3D modeling without API

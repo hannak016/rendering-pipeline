@@ -1,12 +1,6 @@
-
-
-
 import Vector from './vec'
 import Matrix from './mat'
 
-/**
- * Rasterizer implements a CPU rasterization rendering pipeline.
- */
 export default class Rasterizer {
   
   constructor(params) {
@@ -51,7 +45,8 @@ export default class Rasterizer {
   }
  
   initBuffers() {
-   
+
+    //frame buffer and depth buffer
     for (let i = 0; i < this.screen.width*this.screen.height; i++) {
       this.frameBuf[i] = [0 , 0 , 0]
       this.depthBuf[i] = - 1
@@ -59,7 +54,6 @@ export default class Rasterizer {
   }
 
   initTransformation() {
-    //matrices
     const Tscale = new Matrix()
     Tscale.set(
       this.model.scale.x, 0, 0, 0,
@@ -121,7 +115,6 @@ export default class Rasterizer {
       0, 0, 0, 1
     )
 
-
     const myTMC = new Matrix();
     myTMC.multiplyMatrices(new Matrix(),this.Tmodel);
     let TrInvMC = new Matrix();
@@ -141,8 +134,7 @@ export default class Rasterizer {
       let finalVs = [];
       let finalUVs = [];
       let finalVNs = [];
-        
-        
+
       //vertice coordinates
       let vListfIv3 =
       [   this.model.geometry.vertices[this.model.geometry.faces[fI].a],
@@ -154,24 +146,21 @@ export default class Rasterizer {
         finalVs.push(vIn4);
       })
         
-   
-      
-      for(let vI=0;vI<3;vI++){
-         
-      finalUVs.push(this.model.geometry.faceVertexUvs[0][fI][vI])
- 
+      for(let vI = 0;vI < 3; vI++ ){  
+        //uvs
+        finalUVs.push(this.model.geometry.faceVertexUvs[0][fI][vI])
 
-      //normals
-      let n4 = new Vector(
-        this.model.geometry.faces[fI].vertexNormals[vI].x,
-        this.model.geometry.faces[fI].vertexNormals[vI].y,
-        this.model.geometry.faces[fI].vertexNormals[vI].z,
-        0
-      )
-      finalVNs.push(n4)      
+        //normals
+        let n4 = new Vector(
+          this.model.geometry.faces[fI].vertexNormals[vI].x,
+          this.model.geometry.faces[fI].vertexNormals[vI].y,
+          this.model.geometry.faces[fI].vertexNormals[vI].z,
+          0
+        )
+        finalVNs.push(n4)      
       } 
 
-      //pass infos for draw()
+      //pass infos to draw()
       this.draw(finalVs,finalUVs,finalVNs)
     
     }
@@ -179,14 +168,14 @@ export default class Rasterizer {
  
   draw(tri, uvs, normals) {
   
-    // new allocated vertex
+    //new allocated vertex
     const t = new Array(tri.length)
     tri.forEach((v, idx) => {
       t[idx] = this.vertexShader(v)
     })
 
     const computeBarycentric = (x, y, vs) => {
-      // compute barycentric coordinates
+      //barycentric coordinates
       const ap = new Vector(x, y, 0, 1)
         .sub(new Vector(vs[0].x, vs[0].y, 0, 1))
       const ab = new Vector(vs[1].x, vs[1].y, 0, 1)
@@ -285,12 +274,8 @@ fragmentShader(uv, normal, x) {
       this.model.texture.data[4 * indexT + 1],
       this.model.texture.data[4 * indexT + 2]
     ]  
-  
-  
 
-    const ka = this.light.Kamb;
-    const kd = this.light.Kdiff;//light myLight
-    const ks = this.light.Kspec;//light and view H
+    
 
     let myLight = new Vector(
       this.light.position.x-x.x,
@@ -304,23 +289,26 @@ fragmentShader(uv, normal, x) {
       this.camera.position.x - x.x,
       this.camera.position.y - x.y,
       this.camera.position.z - x.z,
-      0);
+      0
+    );
     V.normalize();
+
     const H = new Vector(
       myLight.x + V.x,
       myLight.y + V.y,
       myLight.z + V.z,
-      0)
+      0
+    )
     H.normalize();
     
-
-    const la = ka
-    const ld = kd*Math.max(0.0,normal.dot(myLight))
-    const ls = ks*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
-
- 
     
-    let result = new Array();
+    const la = this.light.Kamb
+    const ld = this.light.Kdiff*Math.max(0.0,normal.dot(myLight))
+    const ls = this.light.Kspec*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
+
+
+    
+    const result = new Array();
     for( let i = 0; i < 3; i++ ) {
       result.push(Math.min(Math.max(myCol[i] * (la + ld + ls), 0), 255))
 

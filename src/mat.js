@@ -87,15 +87,11 @@ export default class Matrix {
     return this
   }
   /**
-   * extraOp1 implements the inverse operation of a matrix
+   * implements the inverse operation of a matrix
    * @return {Matrix} this
    */
   extraOp1() {
-    // TODO: You are allowed to extend a Matrix method,
-    // but no points are given here. Document what's your implemented operation.
-
-    // This implementation is copied from:
-    // https://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix
+  
     const inv = new Array(16)
     inv[0] = this.xs[5] * this.xs[10] * this.xs[15] -
              this.xs[5] * this.xs[11] * this.xs[14] -
@@ -206,12 +202,11 @@ export default class Matrix {
     return this
   }
   /**
-   * extraOp2 implements the transpose operation a given 4x4 matrix.
+   * implements the transpose operation a given 4x4 matrix.
    * @return {Matrix} this
    */
   extraOp2() {
-    // TODO: You are allowed to extend another Matrix method,
-    // but no points are given here. Document what's your implemented operation.
+    
 
     const swap = (arr, a, b) => {
       const tmp = arr[a]

@@ -1,6 +1,6 @@
 # rendering-pipeline:3D modeling without API
 
-## get　start
+## get start
 * Be sure to have [NodeJS](https://nodejs.org/en/) and [NPM](https://www.npmjs.com/) installed.
 * `git pull` to copy the repository
 * `npm i` to install dependencies

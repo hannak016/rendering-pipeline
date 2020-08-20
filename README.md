@@ -1,5 +1,8 @@
 # rendering-pipeline:3D modeling without API
 
+## demo
+![Aaron Swartz](https://github.com/hannak016/rendering-pipeline/blob/master/demo.png)
+
 ## let's go
 * Be sure to have [NodeJS](https://nodejs.org/en/) and [NPM](https://www.npmjs.com/) installed.
 * `git pull` to copy the repository
@@ -37,6 +40,5 @@
 * vertex shader
 * fragment shader:color query+ Blinn-Phong
 
-## demo
-![Aaron Swartz]()
+
 

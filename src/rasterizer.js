@@ -180,41 +180,11 @@ export default class Rasterizer {
   draw(tri, uvs, normals) {
   
     // new allocated vertex
-  
     const t = new Array(tri.length)
     tri.forEach((v, idx) => {
       t[idx] = this.vertexShader(v)
     })
 
-   
-
-    // view frustum culling:  AABB 
-    const xMax = Math.min(Math.max(t[0].x, t[1].x, t[2].x), this.screen.width)
-    const xMin = Math.max(Math.min(t[0].x, t[1].x, t[2].x), 0)
-    const yMax = Math.min(Math.max(t[0].y, t[1].y, t[2].y), this.screen.height)
-    const yMin = Math.max(Math.min(t[0].y, t[1].y, t[2].y), 0)
-    if (xMin > xMax && yMin > yMax) { // no extra computation is needed
-      return
-    }
-
-    // compute normals and shading point in world space for fragment shading
-    normals[0] = normals[0].applyMatrix(this.normalMatrix)
-    normals[1] = normals[1].applyMatrix(this.normalMatrix)
-    normals[2] = normals[2].applyMatrix(this.normalMatrix)
-    const a = new Vector().add(tri[0]).applyMatrix(this.Tmodel)
-    const b = new Vector().add(tri[1]).applyMatrix(this.Tmodel)
-    const c = new Vector().add(tri[2]).applyMatrix(this.Tmodel)
-
-    /**
-    * computeBarycentric implements barycentric coordinates
-    *
-    * @param {number} x is the x coordinate of the fragment
-    * @param {number} y is the y coordinate of the fragment
-    * @param {Array.<Vector>} vs is an Array of Vector vertices.
-    * @return {Vector} a Vector that represents corresponding barycentric
-    * coordinates. For instance, if the computed barycentric coordinates
-    * is (0.1, 0.3, 0.6) then the return value is a vector (0.1, 0.3, 0.6, 0)
-    */
     const computeBarycentric = (x, y, vs) => {
       // compute barycentric coordinates
       const ap = new Vector(x, y, 0, 1)
@@ -234,34 +204,45 @@ export default class Rasterizer {
       const Sbcp = new Vector().crossVectors(bc, bp).dot(out)
       return new Vector(Sbcp / Sabc, Sapc / Sabc, Sabp / Sabc, 0)
     }
+    
+    //AABB
+    const myBox = {
+      xmax:Math.max(t[0].x, t[1].x, t[2].x),
+      xmin:Math.min(t[0].x, t[1].x, t[2].x),
+      ymax:Math.max(t[0].y, t[1].y, t[2].y),
+      ymin:Math.min(t[0].y, t[1].y, t[2].y)
+    }
 
-    for (let i = Math.floor(xMin); i < xMax; i++) {
-      for (let j = Math.floor(yMin); j < yMax; j++) {
-        // barycentric interpolation
-        const w = computeBarycentric(i, j, t)
-        // inside triangle test
-        if (w.x < 0 || w.y < 0 || w.z < 0) {
-          continue
-        }
+    for (let i = Math.floor(myBox.xmin); i < myBox.xmax; i++) {
+      for (let j = Math.floor(myBox.ymin); j < myBox.ymax; j++) {
+    
+        const w = computeBarycentric(i, j, t)// barycentric 
+        if (w.x > 0 && w.y > 0 && w.z > 0) {// inside triangle test
 
-        // depth test
-        const z = w.x * t[0].z + w.y * t[1].z + w.z * t[2].z
-        if (z < this.depthBuf[j * this.screen.width + i]) {
-          continue
-        }
-
+          // depth test
+          const z = w.x * t[0].z + w.y * t[1].z + w.z * t[2].z
+          if (z >this.depthBuf[j * this.screen.width + i]) {
+         
+        
         // uv interpolation
         const uvx = w.x*uvs[0].x + w.y*uvs[1].x + w.z*uvs[2].x
         const uvy = w.x*uvs[0].y + w.y*uvs[1].y + w.z*uvs[2].y
-        const uv = new Vector(uvx, uvy, 0, 1)
+        const uv = {x:uvx, y:uvy}
 
         // fragment position interpolation
+        const a = new Vector().add(tri[0]).applyMatrix(this.Tmodel)
+        const b = new Vector().add(tri[1]).applyMatrix(this.Tmodel)
+        const c = new Vector().add(tri[2]).applyMatrix(this.Tmodel)
         const px = w.x*a.x + w.y*b.x + w.z*c.x
         const py = w.x*a.y + w.y*b.y + w.z*c.y
         const pz = w.x*a.z + w.y*b.z + w.z*c.z
         const p = new Vector(px, py, pz, 1)
 
         // normal interpolation
+        normals[0] = normals[0].applyMatrix(this.normalMatrix)
+        normals[1] = normals[1].applyMatrix(this.normalMatrix)
+        normals[2] = normals[2].applyMatrix(this.normalMatrix)
+         
         const nx = w.x*normals[0].x + w.y*normals[1].x + w.z*normals[2].x
         const ny = w.x*normals[0].y + w.y*normals[1].y + w.z*normals[2].y
         const nz = w.x*normals[0].z + w.y*normals[1].z + w.z*normals[2].z
@@ -269,8 +250,10 @@ export default class Rasterizer {
 
         // Update buffer 
         this.depthBuf[j*this.screen.width + i] = z
-        this.frameBuf[j*this.screen.width + i] =
-          this.fragmentShader(uv, normal, p)
+        this.frameBuf[j*this.screen.width + i] = this.fragmentShader(uv, normal, p);
+
+          }
+        }
       }
     }
   }
@@ -298,9 +281,9 @@ fragmentShader(uv, normal, x) {
     const indexT = width * (height - Math.floor(uv.y * height)) +
                 Math.floor(uv.x * width)
     myCol = [
-      this.model.texture.data[4*indexT],
-      this.model.texture.data[4*indexT+1],
-      this.model.texture.data[4*indexT+2]
+      this.model.texture.data[4 * indexT],
+      this.model.texture.data[4 * indexT + 1],
+      this.model.texture.data[4 * indexT + 2]
     ]  
   
   
@@ -309,7 +292,7 @@ fragmentShader(uv, normal, x) {
     const kd = this.light.Kdiff;//light myLight
     const ks = this.light.Kspec;//light and view H
 
-    let myLight=new Vector(
+    let myLight = new Vector(
       this.light.position.x-x.x,
       this.light.position.y-x.y,
       this.light.position.z-x.z,
@@ -317,16 +300,16 @@ fragmentShader(uv, normal, x) {
     );
     myLight.normalize();
 
-    const V =new Vector(
-      this.camera.position.x-x.x,
-      this.camera.position.y-x.y,
-      this.camera.position.z-x.z,
+    const V = new Vector(
+      this.camera.position.x - x.x,
+      this.camera.position.y - x.y,
+      this.camera.position.z - x.z,
       0);
     V.normalize();
     const H = new Vector(
-      myLight.x+V.x,
-      myLight.y+V.y,
-      myLight.z+V.z,
+      myLight.x + V.x,
+      myLight.y + V.y,
+      myLight.z + V.z,
       0)
     H.normalize();
     
@@ -336,12 +319,10 @@ fragmentShader(uv, normal, x) {
     const ls = ks*Math.pow(Math.max(normal.dot(H),0.0),this.model.texture.shininess)
 
  
-      
-   
     
-    let result=new Array();
-    for(let i=0;i<3;i++){
-      result.push(Math.min(Math.max(myCol[i]*(la+ld+ls), 0), 255))
+    let result = new Array();
+    for( let i = 0; i < 3; i++ ) {
+      result.push(Math.min(Math.max(myCol[i] * (la + ld + ls), 0), 255))
 
     } 
     return result;

@@ -50,9 +50,6 @@ export default class Rasterizer {
     this.model = {
       
       geometry: params.model.geometry,
-      //  The texture color is an array of numbers that aligned as
-      // [r, g, b, a, r, g, b, a, ...] with size (width x height x 4).
-      //only need r, g, b values here
       texture: {
         data: params.model.texture.data,
         width: params.model.texture.width,
@@ -65,32 +62,17 @@ export default class Rasterizer {
 
     // Buffers that is used in the rasterizer.
     //
-    // The frameBuf must be an array of RGB colors, where a color is an
-    // array of three numbers (r, g, b), and RGB values is from 0 to 255.
-    // For instance: this.frameBuf = [[0, 0, 0], [255, 255, 255], ...]
-    // where ... means unlisted elements.
-    //
-    // The depthBuf must be an array of numbers, which are z values.
-    // For instance: this.depthBuf = [-0.6, -0.1, 0.5, ...]
-    // where ... means unlisted elements.
+   
     this.frameBuf = new Array(this.screen.width * this.screen.height)
     this.depthBuf = new Array(this.screen.width * this.screen.height)
 
-    // transformation matrices
-    //
-    // Tmodel is a model transformation Matrix.
-    // Tcamera is a view transformation Matrix.
-    // Tpersp is a perspective transformation Matrix.
-    // Tviewport is a viewport transformation Matrix.
     this.Tmodel = null
     this.Tcamera = null
     this.Tpersp = null
     this.Tviewport = null
     return this
   }
-  /**
-   * initBuffers initializes this.frameBuf and this.depthBuf.
-   */
+ 
   initBuffers() {
     // buffer initialization
     for (let i = 0; i < this.screen.width*this.screen.height; i++) {
@@ -98,12 +80,9 @@ export default class Rasterizer {
       this.depthBuf[i] = -Infinity
     }
   }
-  /**
-   * initTransformation initializes all transformation matrices,
-   * including this.Tmodel, this.Tcamera, this.Tpersp, and this.Tviewport
-   */
+
   initTransformation() {
-    // prepare transformation matrices
+    //matrices
     const Tscale = new Matrix()
     Tscale.set(
       this.model.scale.x, 0, 0, 0,
@@ -165,66 +144,64 @@ export default class Rasterizer {
       0, 0, 0, 1
     )
 
-    
-    //can also be ((Tcamera * Tmodel)^(-1))^T
-    // Here: ((Tmodel)^(-1))^T to save some computation of camera
-    // transforamtion in the shading process.
-    this.normalMatrix = new Matrix()
-      .multiplyMatrices(new Matrix(), this.Tmodel).extraOp1().extraOp2()
+
+    const myTMC = new Matrix();
+    myTMC.multiplyMatrices(new Matrix(),this.Tmodel);
+    let TrInvMC = new Matrix();
+    TrInvMC=myTMC.inverse();
+    TrInvMC.transpose();
+    this.normalMatrix = TrInvMC;
   }
 
-  /**
-   * render implements a rasterization rendering pipeline.
-   * Evetually, this methods stored all computed color in the frame buffer.
-   */
   render() {
     // initialization
     this.initBuffers()
     this.initTransformation()
+
     //get infos
-    const g = this.model.geometry
-    for (let i = 0; i < g.faces.length; i++) {
-      const f = g.faces[i]
+    for(let fI=0;fI<this.model.geometry.faces.length;fI++){
 
-      // vertex generation
-      const a = new Vector(
-        g.vertices[f.a].x, g.vertices[f.a].y, g.vertices[f.a].z, 1)
-      const b = new Vector(
-        g.vertices[f.b].x, g.vertices[f.b].y, g.vertices[f.b].z, 1)
-      const c = new Vector(
-        g.vertices[f.c].x, g.vertices[f.c].y, g.vertices[f.c].z, 1)
+      let finalVs = [];
+      let finalUVs = [];
+      let finalVNs = [];
+        
+        
+      //vertice coordinates
+      let vListfIv3 =
+      [   this.model.geometry.vertices[this.model.geometry.faces[fI].a],
+          this.model.geometry.vertices[this.model.geometry.faces[fI].b],
+          this.model.geometry.vertices[this.model.geometry.faces[fI].c]
+      ]
+      vListfIv3.forEach(e=>{
+        let vIn4 = new Vector(e.x,e.y,e.z,1);
+        finalVs.push(vIn4);
+      })
+        
+   
+      
+      for(let vI=0;vI<3;vI++){
+         
+      finalUVs.push(this.model.geometry.faceVertexUvs[0][fI][vI])
+ 
 
-      // uv generation
-      const UVa = new Vector(
-        g.faceVertexUvs[0][i][0].x, g.faceVertexUvs[0][i][0].y, 0, 1)
-      const UVb = new Vector(
-        g.faceVertexUvs[0][i][1].x, g.faceVertexUvs[0][i][1].y, 0, 1)
-      const UVc = new Vector(
-        g.faceVertexUvs[0][i][2].x, g.faceVertexUvs[0][i][2].y, 0, 1)
+      //normals
+      let n4 = new Vector(
+        this.model.geometry.faces[fI].vertexNormals[vI].x,
+        this.model.geometry.faces[fI].vertexNormals[vI].y,
+        this.model.geometry.faces[fI].vertexNormals[vI].z,
+        0
+      )
+      finalVNs.push(n4)      
+      } 
 
-      // normal generation
-      const Na = new Vector(
-        f.vertexNormals[0].x, f.vertexNormals[0].y, f.vertexNormals[0].z, 0)
-      const Nb = new Vector(
-        f.vertexNormals[1].x, f.vertexNormals[1].y, f.vertexNormals[1].z, 0)
-      const Nc = new Vector(
-        f.vertexNormals[2].x, f.vertexNormals[2].y, f.vertexNormals[2].z, 0)
-
-      // rasterizing the triangle
-      this.draw([a, b, c], [UVa, UVb, UVc], [Na, Nb, Nc])
+      //pass infos for draw()
+      this.draw(finalVs,finalUVs,finalVNs)
+    
     }
   }
-  /**
-   * draw implements the rendering pipeline for a triangle with
-   * vertex shader and fragment shader support.
-   *
-   * @param {Array.<Vector>} tri is an Array of Vector vertices
-   * @param {Array.<Vector>} uvs is an Array of Vector UVs
-   * @param {Array.<Vector>} normals is an Array of Vector normals
-   */
+ 
   draw(tri, uvs, normals) {
-    // TODO: implement a rendering pipeline.
-
+  
     // return:  new allocated vertex
     // camera space vertex coordinates.
     const t = new Array(tri.length)

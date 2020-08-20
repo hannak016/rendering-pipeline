@@ -37,3 +37,6 @@
 * vertex shader
 * fragment shader:color query+ Blinn-Phong
 
+## demo
+![Aaron Swartz]()
+
